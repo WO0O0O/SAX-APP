@@ -10,6 +10,18 @@ const CHARTS_DIR = process.env.SAX_CHARTS_DIR ?? join(import.meta.dirname, '..',
 export function api(db: DatabaseSync): Hono {
   const app = new Hono();
 
+  // The server only listens on 127.0.0.1, but a web page you visit could still try to reach it:
+  // - DNS rebinding: a site whose domain points at 127.0.0.1. Refuse any Host but our own.
+  // - Cross-site form posts: a "simple" request skips the browser's CORS check, so writes must be JSON.
+  app.use('*', async (c, next) => {
+    const host = (c.req.header('host') ?? '').replace(/:\d+$/, '');
+    if (!['127.0.0.1', 'localhost', '[::1]'].includes(host)) return c.json({ error: 'forbidden host' }, 403);
+    if (c.req.method !== 'GET' && !c.req.header('content-type')?.startsWith('application/json')) {
+      return c.json({ error: 'expected JSON' }, 415);
+    }
+    await next();
+  });
+
   app.get('/health', (c) => c.json({ ok: true }));
 
   app.get('/notes', (c) => c.json(db.prepare('SELECT * FROM notes_progress ORDER BY midi').all()));

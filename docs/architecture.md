@@ -13,7 +13,7 @@ The same React app runs in two places. **Almost everything happens in the browse
  https://wo0o0o.github.io/SAX-APP/             http://127.0.0.1:5757
 
  git push ─▶ GitHub Actions                    bin/sax ─▶ builds dist/ if needed
-            (test + build, VITE_HOSTED=true)              │
+            (test + build on Vercel or Pages)            │
                  │                                        ▼
                  ▼                             node server/index.ts (Hono)
           GitHub Pages: static files            ├─ serves dist/
@@ -36,13 +36,15 @@ The same React app runs in two places. **Almost everything happens in the browse
 | Progress tab, saved milestones, lookup counts | ✗ hidden; nothing is saved | ✓ in `data/sax.db` |
 | Updates | Automatically, about a minute after each push to `main` | Next time you run `sax` (it rebuilds if the code changed) |
 
-**How one codebase does both.** The online copy is built with `VITE_HOSTED=true`, which sets `HOSTED` in [src/mode.ts](../src/mode.ts). [src/api.ts](../src/api.ts) checks it in each function:
+**How one codebase does both.** [src/mode.ts](../src/mode.ts) sets `HOSTED` from the page's address: on `127.0.0.1` / `localhost` it's the Mac version, anywhere else it's the online copy. So no build settings are needed on any host. [src/api.ts](../src/api.ts) checks `HOSTED` in each function:
 - the tune list comes from [shared/tunes.ts](../shared/tunes.ts) instead of the database;
 - lookups aren't sent;
 - charts and PDFs are fetched encrypted and decrypted in the browser (§7.6);
 - the Progress tab and milestone editor are hidden.
 
-**Deploying** is automatic. Every push to `main` runs [.github/workflows/pages.yml](../.github/workflows/pages.yml): install, run the tests, build with the `/SAX-APP/` base path, publish to Pages. If a test fails, nothing is published and the previous version stays live.
+**Deploying** is automatic on every push to `main`:
+- **Vercel** (custom domain) reads [vercel.json](../vercel.json): `npm ci`, then `npm test && npm run build`, then serves `dist/` with a few security headers. A failing test stops the deploy.
+- **GitHub Pages** ([.github/workflows/pages.yml](../.github/workflows/pages.yml)) does the same, building under the `/SAX-APP/` path.
 
 ## 2. What happens when you type `sax`
 
@@ -74,7 +76,8 @@ All files in git are needed. Here's what each is for.
 | `scripts/backup.ts` | `npm run backup`: copies the database to `data/backups/`. |
 | `scripts/seal.ts` | `npm run seal`: encrypts `sheet-music/` into `public/sealed/` for the online copy. |
 | `public/sealed/` | The encrypted charts and PDFs (safe in a public repo) plus `manifest.json`. Vite copies `public/` into the build as-is. |
-| `.github/workflows/pages.yml` | Builds and publishes the online copy on every push. |
+| `.github/workflows/pages.yml` | Builds and publishes the GitHub Pages copy on every push. |
+| `vercel.json` | Build settings and security headers for the Vercel copy. |
 | `.gitignore` | Keeps `node_modules/`, `dist/`, `data/` and `sheet-music/` out of git. |
 | `README.md` | How to run it. |
 | `CLAUDE.md` | Rules for Claude when working in this repo (written pitch, your range, the two run modes). |
@@ -111,7 +114,7 @@ All files in git are needed. Here's what each is for.
 | `main.tsx`, `App.tsx` | Boot React; the top bar and tab switching. |
 | `index.css` | Colour tokens, fonts, the `panel` / `caps` styles. |
 | `api.ts` | The browser's side of the API: `getTunes`, `updateTune`, `logLookup`, `loadChart`, `openPdf`. Switches behaviour in the online copy. |
-| `mode.ts`, `sealed.ts` | Online-copy flag; unlocking and decrypting sealed files. |
+| `mode.ts`, `sealed.ts` | Online-copy detection; unlocking and decrypting sealed files. |
 | `screens/` | One file per tab: Scales, All notes, Tunes, Reading, Progress. |
 | `music/` | Scale library (`scales.ts`), building scales across the horn (`build.ts`), the sight-reading generator (`exercise.ts`), the tune chart format (`chart.ts`), the circle-of-fifths dial and scale picker. |
 | `fingering/` | Fingering data for every note (`fingerings.ts`), the key diagram, the fingering card. |
@@ -188,6 +191,9 @@ Two details worth noticing:
   ON CONFLICT (pitch) DO UPDATE SET lookups = lookups + 1, ...
   ```
 - **The chart endpoint checks the slug** against `^[a-z0-9-]+$` before building a file path. Without that, a request like `/api/charts/..%2F..%2Fsomething` could read files outside `sheet-music/`. There's a test for it.
+- **Guarding a local server from websites.** Listening on 127.0.0.1 stops other devices, but a web page open in your browser can still try to talk to `127.0.0.1:5757`. A middleware in `api.ts` blocks two tricks, both tested:
+  - *DNS rebinding:* an attacker's domain that resolves to 127.0.0.1. The API only answers when the `Host` header is 127.0.0.1 or localhost.
+  - *Cross-site form posts:* "simple" requests skip the browser's CORS check. Every write must be `application/json`, which forces that check.
 
 ---
 

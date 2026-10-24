@@ -18,39 +18,45 @@ A personal alto sax practice app: every fingering on the horn, scales from the c
 | **Reading** | Endless sight-reading exercises in the chosen key and scale. Play first; tap a note only if you need its fingering. |
 | **Progress** | Tune milestones and which notes I look up most. *Mac only (see below).* |
 
-## Two ways to run it
+## Two ways to use it
 
-| | Online copy | On my Mac (`sax`) |
+### Option 1: just open the link
+https://wo0o0o.github.io/SAX-APP/ works in any browser with nothing to install. Everything works except saving progress. The Tunes tab asks for the sheet-music passphrase once per device.
+
+### Option 2: set it up on your own Mac (to save progress and add music)
+Only needed if you want to **save progress** (tune milestones, fingering lookups) or **add or change sheet music** on the site.
+
+1. **Install Node 23.6 or newer:** `brew install node`
+2. **Get the code:**
+   ```bash
+   git clone https://github.com/WO0O0O/SAX-APP.git
+   cd SAX-APP
+   ```
+3. **Add a `sax` command** to `~/.zshrc` (use the folder you cloned into), then open a new terminal:
+   ```bash
+   alias sax='"$HOME/path/to/SAX-APP/bin/sax"'
+   ```
+4. **Add your sheet music** (not in git). Create `sheet-music/` in the project folder and put in:
+   - the original PDFs (e.g. `autumn-leaves-easy.pdf`, `FingeringChart.pdf`);
+   - the transcribed charts, `<tune-name>.tune.json` (format in [`src/music/chart.ts`](src/music/chart.ts); Claude can transcribe a PDF into one).
+5. **Your progress database** (`data/sax.db`, not in git) is created automatically the first time you run `sax`. To carry progress over from another Mac, copy that machine's `data/` folder (or a backup from `npm run backup`) into the project before starting.
+6. **Run it:** `sax`. It installs, builds, starts a local server and opens http://127.0.0.1:5757. Ctrl+C stops it.
+
+| | Online link | Your Mac (`sax`) |
 |---|---|---|
-| Where | https://wo0o0o.github.io/SAX-APP/ | http://127.0.0.1:5757 |
-| Needs | A browser | Node 23.6+ |
-| Scales, All notes, Reading | ✓ | ✓ |
-| Tunes | ✓ after entering the passphrase once per device | ✓ |
-| Saves progress and lookups | ✗ | ✓ in `data/sax.db` |
+| Scales, All notes, Reading, Tunes | ✓ | ✓ |
+| Progress tab, saved milestones and lookups | ✗ | ✓ in `data/sax.db` |
+| Needs | A browser | Node + the steps above |
 
-The online copy is static files on GitHub Pages, rebuilt automatically on every push to `main`. It has no server or database, so it never saves anything. The Mac version runs a small local server with a SQLite database, and that's where progress is kept.
-
-### Sheet music in the online copy
-The charts and PDFs are other people's arrangements, so they're not in the repo in readable form. They're published **encrypted**, and the site asks for a passphrase on the Tunes tab (once per device). To update them after adding or changing a chart:
+### Publishing sheet music to the site
+The charts and PDFs are other people's arrangements, so the site only gets **encrypted** copies. After adding or changing anything in `sheet-music/` (needs push access to the repo):
 
 ```bash
 npm run seal          # encrypts sheet-music/ into public/sealed/ (asks for the passphrase)
 git add public/sealed && git commit -m "Update sheet music" && git push
 ```
 
-## Running it on the Mac
-
-```bash
-sax
-```
-
-This installs and rebuilds if needed, starts the server and opens the browser. Ctrl+C stops it. It's an alias in `~/.zshrc`:
-
-```bash
-alias sax='"/Users/danwooster/1. DEV/SAX_APP/bin/sax"'
-```
-
-On a fresh Mac: `brew install node`, clone the repo, add the alias. Then put the PDFs and `*.tune.json` charts in `sheet-music/` (they're not in git).
+The site redeploys automatically after the push.
 
 ## Development
 
@@ -61,7 +67,7 @@ On a fresh Mac: `brew install node`, clone the repo, add the alias. Then put the
 | `npm start` | Build, then serve on port 5757 |
 | `npm test` | Unit tests (Vitest) |
 | `npm run typecheck` | TypeScript check |
-| `npm run seal` | Encrypt sheet music for the online copy |
+| `npm run seal` | Encrypt `sheet-music/` for the online copy |
 | `npm run backup` | Copy the database to `data/backups/` (safe while running) |
 
 Environment: `SAX_PORT` (default 5757), `SAX_DATA_DIR` (default `./data`).
@@ -71,6 +77,7 @@ Environment: `SAX_PORT` (default 5757), `SAX_DATA_DIR` (default `./data`).
 - `src/`: the React app (everything you see, plus the music theory and fingerings).
 - `shared/`: code used by both browser and server (note spelling, transposition, encryption, tune list).
 - `server/`: the Mac-only API and SQLite database.
+- `vercel.json`, `.github/workflows/pages.yml`: how the online copy is built and deployed.
 - `public/sealed/`: encrypted sheet music for the online copy.
 - `docs/`: start with [status.md](docs/status.md); [architecture.md](docs/architecture.md) explains how it all works.
 

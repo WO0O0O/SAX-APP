@@ -8,7 +8,8 @@ const setup = () => {
   seed(db);
   return { db, app: api(db) };
 };
-const json = (method: string, body: unknown) => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+const json = (method: string, body: unknown) => ({ method, headers: { 'content-type': 'application/json', host: '127.0.0.1:5757' }, body: JSON.stringify(body) });
+const local = { headers: { host: '127.0.0.1:5757' } };
 
 describe('api', () => {
   it('updates a tune milestone, tempo and no-chart flag', async () => {
@@ -30,6 +31,14 @@ describe('api', () => {
 
   it('rejects chart slugs that try to leave the folder', async () => {
     const { app } = setup();
-    expect((await app.request('/charts/..%2Fpackage')).status).toBe(404);
+    expect((await app.request('/charts/..%2Fpackage', local)).status).toBe(404);
+  });
+
+  it('refuses other hosts (DNS rebinding) and non-JSON writes (cross-site posts)', async () => {
+    const { app } = setup();
+    expect((await app.request('/tunes', { headers: { host: 'evil.example:5757' } })).status).toBe(403);
+    expect((await app.request('/tunes', local)).status).toBe(200);
+    const formPost = { method: 'POST', headers: { host: '127.0.0.1:5757', 'content-type': 'text/plain' }, body: '{"midi":67}' };
+    expect((await app.request('/lookup', formPost)).status).toBe(415);
   });
 });
