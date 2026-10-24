@@ -301,7 +301,25 @@ GitHub Pages sites are always public, and the charts are other people's arrangem
 - **Files:** each file is encrypted with AES-GCM and a fresh random IV. GCM also detects a wrong key or tampering, so decryption fails loudly rather than returning garbage.
 - **Manifest:** `manifest.json` holds the salt, the list of files with their SHA-256, and a `check` value (the encrypted text `sax-tutor`). The browser can check a passphrase without downloading any charts, and `npm run seal` only re-encrypts files whose hash changed, which keeps git diffs small.
 - **In the browser:** Web Crypto derives the key once, and the **derived key** (not your passphrase) is kept in localStorage. Charts are decrypted to JSON; PDFs to a temporary `blob:` URL opened in a new tab.
-- **What's visible publicly:** file names and sizes, nothing else. Use a passphrase you don't use anywhere else.
+- **What's visible publicly:** file names and sizes, nothing else.
+
+**How strong is it?**
+- **What's protected:** only the sheet music. Scales, All notes and Reading are public by design.
+- **The encryption can't be bypassed.** AES-256-GCM is the same standard used for banking and messaging. Without the key, the files are noise.
+- **The passphrase is the weak point.** The sealed files are public, so anyone can download them and guess passphrases offline as fast as their hardware allows. No server is involved, so there's no lockout. The 250,000 PBKDF2 rounds make each guess slow: a high-end GPU manages roughly tens of thousands of guesses per second, not billions.
+
+  | Passphrase | Rough time to guess on one fast GPU |
+  |---|---|
+  | A single dictionary word, a name, or a short common password | Seconds to minutes |
+  | 8 random lowercase letters and digits | Around a year (less with rented GPUs) |
+  | 4+ random words (e.g. `velvet-trumpet-orbit-lantern`) or 14+ random characters | Far beyond practical: centuries or more |
+
+- **Other ways in:**
+  - someone using a browser where you've already unlocked it (the key is stored there);
+  - the **first commit in git history still contains the two original PDFs in plain form**, from before they moved to `sheet-music/`;
+  - old sealed files stay in git history, so changing the passphrase doesn't protect copies made with the old one.
+
+In practice this deters casual access to other people's arrangements. It isn't meant for anything truly secret.
 
 ### 7.7 The backdrop ([src/scene/BarScene.tsx](../src/scene/BarScene.tsx))
 One SVG made of:
