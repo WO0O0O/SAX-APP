@@ -17,7 +17,6 @@ Free practice areas, no timers. Fingerings for every written note are the core, 
 - Abstract backdrop (light ribbons, bokeh, smoke). The illustrated band was rejected as looking AI-generated. Normal UI sizes. (2026-10-24)
 - `sheet-music/` (PDFs + transcribed `*.tune.json` charts) is git-ignored: other people's arrangements. (2026-10-24)
 - Schema trimmed to tunes, tune_progress, notes_progress (migration 003); timed-session tables dropped. `app-spec.md` and `plan.md` retired; their live content is here and in `architecture.md`. (2026-10-24)
-
 - Online copy on GitHub Pages (static, no server, Progress hidden); sheet music published encrypted with a passphrase (`npm run seal`). Phone: dropdown scale picker, fewer bars per line. (2026-10-24)
 
 ## Built
