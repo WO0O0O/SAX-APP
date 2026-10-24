@@ -34,8 +34,8 @@ Environment: `SAX_PORT` (default 5757), `SAX_DATA_DIR` (default `./data`).
 ## Layout
 
 - `server/`: Hono API, SQLite via Node's built-in `node:sqlite`, migrations in `server/migrations/` (applied automatically on start).
-- `shared/`: code used by both server and browser (pitch maths).
+- `shared/`: music maths used by both server and browser.
 - `src/`: React UI.
-- `docs/`: spec, curriculum, plan, and `status.md` (start there).
+- `docs/`: start with `status.md`; `architecture.md` explains how it all works and how data is saved.
 
-Server TypeScript runs directly on Node (type stripping), with no compile step.
+Your progress lives in `data/sax.db` (not in git). Tune charts and PDFs live in `sheet-music/` (not in git).

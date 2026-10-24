@@ -14,7 +14,7 @@ async function send(method: string, path: string, body: unknown) {
   if (!res.ok) throw new Error(`${path}: ${res.status}`);
 }
 
-export const getTunes = () => getJson<{ tunes: Tune[] }>('/api/progress').then((r) => r.tunes);
+export const getTunes = () => getJson<Tune[]>('/api/tunes');
 export const updateTune = (id: number, patch: Partial<{ stage: number; tempo: number | null; no_chart: boolean }>) =>
   send('PATCH', `/api/tunes/${id}`, patch);
 /** Fire-and-forget: a "check fingering" tap. */

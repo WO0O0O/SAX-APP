@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fromMidi } from '../../shared/pitch.ts';
+import { fromMidi } from '../../shared/theory.ts';
 import { getJson, getTunes, type NoteRow, type Tune } from '../api.ts';
 import { TuneProgress } from '../tunes/TuneProgress.tsx';
 

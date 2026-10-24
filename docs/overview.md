@@ -45,9 +45,8 @@ A personal practice system for one student: a laptop web app (plus a Claude proj
 | `status.md` | **Living file:** current phase, decisions, open questions. Update every session. |
 | `overview.md` | This file. Context and goals. |
 | `design.md` | (Planned, Phase 0.5) Visual design system for the jazz-bar theme. |
-| `app-spec.md` | What the web app does, data model, tech stack. |
 | `curriculum.md` | Stages: reading, theory, jazz/blues language, repertoire. |
-| `plan.md` | Build phases for the agent, with acceptance criteria. |
+| `architecture.md` | How the code works: backend, save data, the interesting parts. |
 | `tutor-instructions.md` | Claude project instructions (v2) for the tutor conversations. |
 
 ## Decisions (2026-10-24)

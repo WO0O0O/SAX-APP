@@ -53,12 +53,9 @@ export function atMidi(s: Spelling, midi: number): Note {
 }
 
 const ACC_TEXT: Record<number, string> = { [-2]: '𝄫', [-1]: '♭', 0: '', 1: '♯', 2: '𝄪' };
-const ACC_ASCII: Record<number, string> = { [-2]: 'bb', [-1]: 'b', 0: '', 1: '#', 2: '##' };
 
 /** 'F♯' (display). */
 export const nameOf = (s: Spelling) => LETTERS[s.letter] + ACC_TEXT[s.acc];
-/** 'F#' (ascii, for keys and VexFlow). */
-export const asciiOf = (s: Spelling) => LETTERS[s.letter] + ACC_ASCII[s.acc];
 /** 'F♯4'. */
 export const noteName = (n: Note) => `${nameOf(n)}${n.octave}`;
 
@@ -70,3 +67,9 @@ export function parseNote(text: string): Note {
   const octave = Number(m[2]);
   return { ...s, octave, midi: (octave + 1) * 12 + NATURAL_PC[s.letter] + s.acc };
 }
+
+// One fixed spelling per pitch class, used as a database key ('F#5', 'Bb4').
+const KEY_NAMES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+
+/** 66 -> 'F#4'. */
+export const fromMidi = (midi: number) => `${KEY_NAMES[midi % 12]}${Math.floor(midi / 12) - 1}`;

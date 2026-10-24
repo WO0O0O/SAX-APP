@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { atMidi, concertToWritten, nameOf, noteName, parseSpelling, spellDegree, writtenToConcert } from './theory.ts';
+import { atMidi, concertToWritten, fromMidi, nameOf, noteName, parseNote, parseSpelling, spellDegree, writtenToConcert } from './theory.ts';
 
 const spell = (tonic: string, degrees: string[]) => degrees.map((d) => nameOf(spellDegree(parseSpelling(tonic), d)));
 
@@ -31,5 +31,16 @@ describe('spelling', () => {
   it('places notes in the right octave across C/B boundaries', () => {
     expect(noteName(atMidi(parseSpelling('B#'), 60))).toBe('B♯3');
     expect(noteName(atMidi(parseSpelling('Cb'), 59))).toBe('C♭4');
+  });
+});
+
+describe('midi', () => {
+  it('parses notes and gives fixed database names', () => {
+    expect(parseNote('C4').midi).toBe(60);
+    expect(parseNote('D#6').midi).toBe(87);
+    expect(parseNote('Eb6').midi).toBe(87);
+    expect(fromMidi(87)).toBe('Eb6');
+    expect(fromMidi(66)).toBe('F#4');
+    expect(() => parseNote('H2')).toThrow();
   });
 });

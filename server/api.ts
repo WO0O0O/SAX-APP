@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { DatabaseSync } from 'node:sqlite';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { fromMidi } from '../shared/pitch.ts';
+import { fromMidi } from '../shared/theory.ts';
 
 // Local-only tune charts (git-ignored), see src/music/chart.ts.
 const CHARTS_DIR = process.env.SAX_CHARTS_DIR ?? join(import.meta.dirname, '..', 'sheet-music');
@@ -12,20 +12,17 @@ export function api(db: DatabaseSync): Hono {
 
   app.get('/health', (c) => c.json({ ok: true }));
 
-  app.get('/profile', (c) => c.json(db.prepare('SELECT * FROM profile WHERE id = 1').get()));
-
   app.get('/notes', (c) => c.json(db.prepare('SELECT * FROM notes_progress ORDER BY midi').all()));
 
-  app.get('/progress', (c) =>
-    c.json({
-      tracks: db.prepare('SELECT track, stage FROM track_progress').all(),
-      tunes: db
+  app.get('/tunes', (c) =>
+    c.json(
+      db
         .prepare(
           `SELECT t.id, t.title, t.key_concert, t.status, p.stage, p.tempo, p.no_chart
-           FROM tunes t LEFT JOIN tune_progress p ON p.tune_id = t.id ORDER BY t.id`,
+           FROM tunes t JOIN tune_progress p ON p.tune_id = t.id ORDER BY t.id`,
         )
         .all(),
-    }),
+    ),
   );
 
   app.get('/charts/:slug', (c) => {
@@ -64,7 +61,8 @@ export function api(db: DatabaseSync): Hono {
     const now = new Date().toISOString();
     db.prepare(
       `INSERT INTO notes_progress (pitch, midi, lookups, first_seen, last_seen) VALUES (?, ?, 1, ?, ?)
-       ON CONFLICT (pitch) DO UPDATE SET lookups = lookups + 1, last_seen = excluded.last_seen`,
+       ON CONFLICT (pitch) DO UPDATE SET lookups = lookups + 1, last_seen = excluded.last_seen,
+         first_seen = coalesce(first_seen, excluded.first_seen)`,
     ).run(fromMidi(midi), midi, now.slice(0, 10), now);
     return c.json({ ok: true });
   });

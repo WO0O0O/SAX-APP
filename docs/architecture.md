@@ -1,0 +1,309 @@
+# How Sax Tutor is built
+
+A guide to the code: what each part does, how data is saved, and the parts that are interesting to read. Start with the big picture, then dip into whichever section you need.
+
+---
+
+## 1. The big picture
+
+```
+ Terminal: `sax`                       Your browser (http://127.0.0.1:5757)
+      │                                 ┌──────────────────────────────────────┐
+      ▼                                 │ React app (src/)                     │
+ bin/sax ── builds if needed ──▶ dist/  │  Scales · All notes · Tunes ·        │
+      │                          (HTML, │  Reading · Progress                  │
+      ▼                           JS,   │                                      │
+ node server/index.ts ◀─ serves ─ CSS)  │  music theory, fingerings, notation  │
+ ┌───────────────────────────┐          │  all run here, in the browser        │
+ │ Hono web server           │◀── /api ─┤                                      │
+ │  • static files (dist/)   │   JSON   │  localStorage: last key/scale/tune   │
+ │  • /api/* endpoints       │          └──────────────────────────────────────┘
+ └──────┬──────────────┬─────┘
+        │              │ reads
+        ▼              ▼
+  data/sax.db     sheet-music/*.tune.json
+  (SQLite file)   (your transcribed charts)
+```
+
+The work splits like this:
+
+- **The browser does almost everything.** Scales, spelling, transposition, fingerings, sight-reading generation and drawing the notation are all code in `src/` and `shared/`, running in the page. None of it needs the server.
+- **The server is small.** It hands the browser the built app, saves your progress and lookups to a SQLite file, and serves your tune charts. That's about 180 lines of code in total.
+- **Nothing leaves the laptop.** The server only listens on `127.0.0.1` (loopback), so other devices on your wifi can't reach it. There's no login because there's nothing to log in to.
+
+## 2. What happens when you type `sax`
+
+`~/.zshrc` has `alias sax='".../SAX_APP/bin/sax"'`. [bin/sax](../bin/sax) is a short zsh script that:
+
+1. **Checks if it's already running.** If something is listening on port 5757, it just opens the browser and exits.
+2. **Installs dependencies if needed.** If `node_modules/` is missing, or `package-lock.json` is newer than the last install, it runs `npm ci`.
+3. **Builds if needed.** If any file in `src/`, `shared/`, `index.html` or `vite.config.ts` is newer than `dist/index.html`, it runs `npm run build` (Vite bundles the React app into `dist/`).
+4. **Opens the browser once the server answers.** A background loop polls `/api/health` every 0.1s, then runs `open`.
+5. **Starts the server** with `exec node server/index.ts`. `exec` replaces the script with Node, so Ctrl+C stops the server directly.
+
+Node runs the `.ts` files directly, with no compile step. Since Node 23.6, Node strips TypeScript types on load. Two rules make that work:
+- imports use the `.ts` extension (`import { openDb } from './db.ts'`);
+- only "erasable" TypeScript is allowed (no `enum`, no `namespace`). `tsconfig.json` enforces that with `erasableSyntaxOnly`.
+
+## 3. Every file, and whether it's needed
+
+All files in git are needed. Here's what each is for.
+
+### Root
+| File | Why it exists |
+|---|---|
+| `package.json` | Dependencies and the npm scripts (`dev`, `build`, `start`, `test`, `typecheck`, `backup`). |
+| `package-lock.json` | Exact dependency versions, so `npm ci` installs the same thing every time. Generated; never edit by hand. It's 2,700 lines, which is why the repo looks bigger than it is. |
+| `tsconfig.json` | TypeScript settings for both browser and server code. |
+| `vite.config.ts` | The build tool config: React + Tailwind plugins, the dev proxy (`/api` → port 5757), and test settings. |
+| `index.html` | The single HTML page. It contains just `<div id="root">` and loads `src/main.tsx`. Vite needs it as the entry point. |
+| `bin/sax` | The launcher described above. |
+| `scripts/backup.ts` | `npm run backup`: copies the database to `data/backups/`. |
+| `.gitignore` | Keeps `node_modules/`, `dist/`, `data/` and `sheet-music/` out of git. |
+| `README.md` | How to run it. |
+| `CLAUDE.md` | Rules for Claude when working in this repo (written pitch, your range, local-only). |
+
+### Folders that aren't in git (generated or personal)
+| Folder | What it is | Safe to delete? |
+|---|---|---|
+| `node_modules/` | Installed dependencies | Yes. `sax` reinstalls them. |
+| `dist/` | The built app | Yes. `sax` rebuilds it. |
+| `data/` | **Your saved progress** (`sax.db`) and backups | **No.** That's your data (see §5). |
+| `sheet-music/` | Your PDFs and transcribed charts | No. Not in git because they're other people's arrangements. |
+
+### `server/` (back end, about 180 lines plus tests)
+| File | Role |
+|---|---|
+| `index.ts` | Starts the web server: opens the DB, mounts the API at `/api`, serves `dist/`, binds to 127.0.0.1. |
+| `db.ts` | Opens SQLite and runs migrations. |
+| `migrations/*.sql` | The database schema, as a history of changes (see §4). |
+| `seed.ts` | Fills a brand-new database with your tune list. |
+| `api.ts` | The JSON endpoints. |
+| `*.test.ts` | Tests for the database and the API. |
+
+### `shared/` (pure music maths, used by browser and server)
+| File | Role |
+|---|---|
+| `theory.ts` | Note spelling, transposition, MIDI numbers. The most "music theory" file in the repo. |
+| `student.ts` | Your comfortable range (C4–D♯6). Change it here when it grows. |
+
+### `src/` (front end)
+| Folder / file | Role |
+|---|---|
+| `main.tsx`, `App.tsx` | Boot React; the top bar and tab switching. |
+| `index.css` | Colour tokens, fonts, the `panel` / `caps` styles. |
+| `api.ts` | The browser's side of the API: `getTunes`, `updateTune`, `logLookup`. |
+| `screens/` | One file per tab: Scales, All notes, Tunes, Reading, Progress. |
+| `music/` | Scale library (`scales.ts`), building scales across the horn (`build.ts`), the sight-reading generator (`exercise.ts`), the tune chart format (`chart.ts`), the circle-of-fifths dial and scale picker. |
+| `fingering/` | Fingering data for every note (`fingerings.ts`), the key diagram, the fingering card. |
+| `notation/` | `Score.tsx` turns notes into sheet music with VexFlow. |
+| `tunes/` | The milestone / tempo / no-chart editor. |
+| `scene/` | The animated background. |
+| `ui/NoteText.tsx` | Sets ♯/♭ in a font that has them (the serif heading font doesn't). |
+
+### `docs/`
+| File | For |
+|---|---|
+| `status.md` | **Start here.** Where things stand, decisions, what's next. |
+| `architecture.md` | This file. |
+| `overview.md` | Who it's for, goals, the 3-month test. |
+| `curriculum.md` | The teaching plan the Claude tutor follows. The app doesn't enforce it. |
+| `tutor-instructions.md` | Paste into the Claude tutor project. |
+| `design.md` | Colours, fonts, the backdrop, component rules. |
+
+---
+
+## 4. The back end
+
+### The web server ([server/index.ts](../server/index.ts))
+[Hono](https://hono.dev) is a tiny web framework. The whole server is:
+
+```ts
+const db = openDb();      // open data/sax.db, run any new migrations
+seed(db);                 // first run only: insert the tune list
+const app = new Hono();
+app.route('/api', api(db));                         // JSON endpoints
+app.use('/*', serveStatic({ root: DIST }));          // the built app
+app.get('*', serveStatic({ path: 'dist/index.html' })); // fallback: always serve the page
+serve({ fetch: app.fetch, port: 5757, hostname: '127.0.0.1' });
+```
+
+In development (`npm run dev`) two processes run instead. Vite serves `src/` with hot reload on port 5173 and forwards `/api` to the Node server on 5757 (the `proxy` setting in `vite.config.ts`). `node --watch` restarts the server whenever a server file changes.
+
+### The database ([server/db.ts](../server/db.ts))
+- **SQLite**: the whole database is one file, `data/sax.db`. There's no database server to install or run. It uses Node's built-in `node:sqlite` module, so it needs no npm package and no native compile step.
+- **WAL mode** (`PRAGMA journal_mode = WAL`): writes go to `sax.db-wal` first and are merged into `sax.db` later. That makes writes fast and crash-safe, and it's why you see three files in `data/`. Treat them as one unit.
+- **Migrations**: the schema lives in numbered `.sql` files. On every start, `openDb()` checks the `schema_migrations` table and runs any file it hasn't run yet, in order, each inside a transaction:
+
+  | File | What it did |
+  |---|---|
+  | `001_init.sql` | The original schema, including the timed-session tables. |
+  | `002_fingering_ladder.sql` | Reset the "unlocked notes" for the old reading ladder. |
+  | `003_free_practice.sql` | Dropped everything the timed-session design needed and left the three tables below. |
+
+  **Never edit a migration that has already run.** Your database has recorded it as done and won't run it again. To change the schema, add `004_something.sql`.
+
+### What's in the database
+```
+tunes            id, title, key_concert, form, status ('active' | 'queued' | 'done'), notes
+tune_progress    tune_id → tunes.id, stage (0-5), tempo, no_chart (0/1), updated_at
+notes_progress   pitch ('F#5'), midi (78), lookups, first_seen, last_seen
+schema_migrations  which migration files have run
+```
+
+### The API ([server/api.ts](../server/api.ts))
+| Method & path | Does | Used by |
+|---|---|---|
+| `GET /api/health` | `{ ok: true }` | `bin/sax`, to know when to open the browser |
+| `GET /api/tunes` | Tunes joined with their progress | Tunes, Progress |
+| `PATCH /api/tunes/:id` | Update `stage` / `tempo` / `no_chart` (validates stage 0–5) | Milestone editor |
+| `POST /api/lookup` | `{ midi }`: add 1 to that note's lookup count | Tapping a note in Reading or Tunes |
+| `GET /api/notes` | All lookup counts | Progress |
+| `GET /api/charts/:slug` | Reads `sheet-music/<slug>.tune.json` | Tunes |
+
+Two details worth noticing:
+- **The lookup is an "upsert"** (insert or update in one statement), so a note's row is created on its first lookup:
+  ```sql
+  INSERT INTO notes_progress (pitch, midi, lookups, ...) VALUES (?, ?, 1, ...)
+  ON CONFLICT (pitch) DO UPDATE SET lookups = lookups + 1, ...
+  ```
+- **The chart endpoint checks the slug** against `^[a-z0-9-]+$` before building a file path. Without that, a request like `/api/charts/..%2F..%2Fsomething` could read files outside `sheet-music/`. There's a test for it.
+
+---
+
+## 5. How your data is saved
+
+There are three places, each for a different kind of thing.
+
+| What | Where | Lifetime |
+|---|---|---|
+| Tune milestones, best tempo, "played without a chart", fingering lookups per note | **SQLite**, `data/sax.db` | Permanent; survives restarts, rebuilds and git pulls. |
+| Last key + scale you picked; last tune you opened | **Browser localStorage** (`sax.picker.v1`, `sax.tune.v1`) | Convenience only. Clearing browser data just resets your picks. |
+| Tune charts | **Files**, `sheet-music/*.tune.json` | Read-only for the app; created by transcription. |
+
+**Not saved yet:** notes marked "fumbled", and the exercises you've played. Both reset when you leave the page.
+
+### Following one save from tap to disk
+Tap a note in Reading or Tunes:
+1. The screen's `onTap` colours the note amber and calls `logLookup(note.midi)` ([src/api.ts](../src/api.ts)).
+2. That sends `POST /api/lookup {"midi": 78}` to the server. It's fire-and-forget: if the server is down, the tap still works, it just isn't counted.
+3. [server/api.ts](../server/api.ts) checks 58 ≤ midi ≤ 90, turns 78 into `'F#5'` with `fromMidi`, and runs the upsert.
+4. SQLite writes it to `sax.db-wal`. It's on disk before the response is sent.
+5. The Progress tab reads it back via `GET /api/notes`.
+
+Changing a milestone works the same way: [TuneProgress.tsx](../src/tunes/TuneProgress.tsx) updates the screen straight away, then `PATCH`es the server and shows "Saved" (or an error if the server isn't running).
+
+### Backing up, inspecting, resetting
+- **Backup:** `npm run backup` writes `data/backups/sax-YYYY-MM-DD-HH-MM.db`. It uses SQLite's `VACUUM INTO`, which makes a consistent copy even while the app is running. Copying the files by hand could catch it halfway through a write.
+- **Look inside:** `sqlite3 data/sax.db 'SELECT * FROM tune_progress'`. The `sqlite3` command ships with macOS.
+- **Start over:** quit the app and delete `data/`. The next `sax` creates a fresh database, runs the migrations and seeds the tune list.
+
+---
+
+## 6. The front end
+
+- **Screens without a router library.** [App.tsx](../src/App.tsx) keeps the current tab in state and in the URL hash (`#scales`, `#tunes`), so refreshing keeps your place.
+- **Lazy loading.** VexFlow, the notation library, is about 390 KB gzipped because it embeds its music fonts. Scales, Tunes and Reading load it with `React.lazy`, so All notes and Progress open without it.
+- **The scene stays mounted.** `BarScene` renders once behind everything. Each screen calls `onSceneDim(0.5)` to set how dark the overlay is.
+- **Styling** is Tailwind utility classes plus a few named styles in `index.css` (`panel`, `caps`) and the `paper` card in `notation/score.css`.
+
+---
+
+## 7. The interesting parts
+
+### 7.1 Spelling notes properly ([shared/theory.ts](../shared/theory.ts))
+A MIDI number (60 = middle C) can't tell F♯ from G♭; they're the same key on a piano. Sheet music needs the right name: F♯ major contains E♯, not F, because each scale step uses the next letter. So notes are stored as **letter + accidental**:
+
+```ts
+type Spelling = { letter: number; acc: number }   // F♯ = { letter: 3 (F), acc: +1 }
+```
+
+Everything is built on one function. `transpose(s, letterSteps, semitones)` moves the letter by N steps, then picks whatever accidental makes the semitone count come out right:
+
+- **A scale degree** ('♭3', '♯4') is "move up (degree−1) letters and the matching number of semitones". So E harmonic minor's 7th comes out as D♯, never E♭.
+- **Alto transposition** is a major 6th: 5 letters and 9 semitones. `writtenToConcert(s) = transpose(s, -5, -9)`. Tests check the rules from the spec: concert C → written A, B♭ → G, G minor → E minor.
+- **Octave numbers** follow the letter, not the sound. B♯3 is the same key as C4. `atMidi` handles that with `octave = (midi − naturalPc(letter) − acc) / 12 − 1`.
+
+Some correct spellings look wrong to players. B♭ blues spelled strictly has an F♭. So a degree can offer a fallback (`'b5|#4'`), and [build.ts](../src/music/build.ts) uses the second option when the first gives F♭, C♭, E♯, B♯ or a double accidental. B♭ blues then gets an E.
+
+### 7.2 Fingerings ([src/fingering/fingerings.ts](../src/fingering/fingerings.ts))
+- Keyed by **written MIDI number**, because the fingering depends only on which key you press, not on the note's name (C♯ and D♭ finger the same).
+- Only the bottom octave (58–73) is typed out by hand. The second octave is generated: **"same fingering + octave key"**, which is also the rule you learn on the horn. The palm-key notes (86–90) are listed separately. That's 33 notes from about 40 lines of data.
+- Each note is a list of fingerings: the first is standard, the rest are named alternates (Bis / 1+1 / Side B♭).
+- The diagram ([FingeringDiagram.tsx](../src/fingering/FingeringDiagram.tsx)) is a fixed list of key shapes. Each key whose id is in the fingering gets filled amber.
+- Source: the TamingTheSaxophone chart in `sheet-music/`. Tests check full coverage and spot-check notes against the chart.
+
+### 7.3 Drawing sheet music ([src/notation/Score.tsx](../src/notation/Score.tsx))
+VexFlow draws the notation as SVG. `Score` handles two jobs: scale lines (whole notes, no bars) and real music (time and key signatures, rests, dots, ties, triplets, chords). For each bar it:
+
+1. Creates a `Stave`, adding the clef and key signature at the start of each line and the time signature on the first bar.
+2. Turns each item into a `StaveNote`. **Accidentals follow the real notation rule:** a sharp lasts until the end of the bar, and the key signature sets the default. A `Map` tracks "current accidental for this letter in this octave" and only draws a ♯/♭/♮ when the note differs from it.
+3. Wraps triplet groups in a `Tuplet` (they must exist before formatting, because they change note lengths), auto-beams eighth notes, and lets `Formatter` space everything.
+4. Places chord symbols above the beat they land on, by adding up note lengths across the bar.
+
+After all bars are drawn, **ties** are added. A tie across a line break becomes two half-ties, one at the end of the line and one at the start of the next.
+
+**Tap targets and the bug you found.** Each note gets a transparent `<rect class="note-hit">` on top that calls `onTap`. VexFlow 5 also puts its own invisible rectangle with `pointer-events="auto"` over every note, and those were catching your clicks. My first test called the click handler directly, so it skipped the browser's hit-testing and missed the problem. The fix is two parts:
+- CSS turns off pointer events for everything VexFlow draws (`.score svg * { pointer-events: none }`) and turns them back on for `.note-hit`;
+- the tap targets are appended last, so they sit on top.
+
+### 7.4 The sight-reading generator ([src/music/exercise.ts](../src/music/exercise.ts))
+- **Seeded randomness.** `rng(seed)` is a small pseudo-random generator called mulberry32. The same seed always produces the same exercise, so an exercise can be reproduced (and tested).
+- **A random walk through the scale.** It takes every note of the scale inside your range, starts on the tonic nearest G4, and steps up or down 1–3 scale notes at a time, mostly by step. It bounces off the range edges and refuses jumps bigger than a 5th.
+- **Rhythm** comes from a list of one-bar patterns that each add up to 4 beats.
+- The last note snaps to the nearest tonic, so every exercise ends at home.
+
+Tests run every scale × 25 seeds and check that the notes stay in range, stay in the scale, make 4 beats per bar and end on the tonic.
+
+### 7.5 The tune chart format ([src/music/chart.ts](../src/music/chart.ts))
+Charts are plain text tokens, one string per bar, so they're easy to transcribe and to read in a diff:
+
+```json
+{ "notes": "r/q. D5/8 E5/q F#5/q", "chords": ["D7"] }
+{ "notes": "B5/q. B5/8~ B5/h",     "chords": ["Em", "A7@2"] }
+```
+
+`r` = rest · `q`/`h`/`w`/`8` = length · `.` = dotted · `~` = tied to the next note · `3` = triplet · `A7@2` = chord starting on beat 2.
+
+A test parses each chart and checks that every bar adds up to exactly 4 beats, which catches most transcription slips.
+
+### 7.6 The backdrop ([src/scene/BarScene.tsx](../src/scene/BarScene.tsx))
+One SVG made of:
+- a gradient room;
+- soft "bokeh" lights (circles filled with a radial gradient that fades to transparent);
+- four flowing ribbons, each a wave path drawn three times (wide and faint, narrow and brighter, a thin brass highlight);
+- rising smoke puffs;
+- a static grain texture.
+
+It stays cheap to run because animations only change `transform` and `opacity`, which the browser hands to the GPU without recalculating layout. All animation stops when the tab is hidden (`html[data-hidden]`) or when macOS "reduce motion" is on.
+
+---
+
+## 8. Tests
+
+`npm test` runs about 50 tests in under a second:
+
+| File | Checks |
+|---|---|
+| `shared/theory.test.ts` | Transposition, spelling, octave edge cases, MIDI parsing |
+| `src/music/build.test.ts` | Scales across the horn stay in range; blues spelling |
+| `src/music/exercise.test.ts` | Every scale × 25 seeds: in range, in scale, 4 beats, ends on tonic |
+| `src/music/chart.test.ts` | Chart tokens; every bar of your charts is 4 beats |
+| `src/fingering/fingerings.test.ts` | Every note B♭3–F♯6 has a fingering; spot checks against the chart |
+| `server/db.test.ts` | Migrations leave exactly the expected tables; seeding runs once |
+| `server/api.test.ts` | Tune updates and validation, lookup counting, the path-escape guard |
+
+`npm run typecheck` runs TypeScript over everything.
+
+---
+
+## 9. How to change things
+
+| You want to… | Do this |
+|---|---|
+| Add a tune chart | Put the PDF in `sheet-music/` and ask Claude to transcribe it to `sheet-music/<slug>.tune.json`, where the slug is the title in lowercase with dashes. Run `npm test` to check the bar lengths. |
+| Add a tune to the list | Add a row to `tunes` and `tune_progress` with a new migration (or ask Claude). |
+| Add or edit a scale | Add an entry to `SCALES` in `src/music/scales.ts` (degrees + sound / use / songs). It appears everywhere automatically. |
+| Widen your range | Change `shared/student.ts`. Grey "stretch" notes and the Reading generator follow it. |
+| Save something new | Add a migration (`004_….sql`), an endpoint in `server/api.ts` with a test, and a function in `src/api.ts`. |
+| Work on the code | `npm run dev` for hot reload; `npm test` and `npm run typecheck` before committing. |

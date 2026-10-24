@@ -1,5 +1,7 @@
 # Curriculum
 
+The teaching plan the Claude tutor follows (`tutor-instructions.md`). The app doesn't enforce stages or timings: it's free practice, and the student decides what to work on.
+
 Four parallel tracks. Each session picks work from all four, at the student's current stage in each. Stage advances are earned by criteria, not by calendar.
 
 All pitches are **written alto** unless marked "concert".
