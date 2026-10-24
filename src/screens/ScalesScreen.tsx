@@ -7,6 +7,7 @@ import { fullRange, oneOctave, scaleSpellings } from '../music/build.ts';
 import { ScalePicker } from '../music/ScalePicker.tsx';
 import { usePicker } from '../music/usePicker.ts';
 import { NoteText } from '../ui/NoteText.tsx';
+import { useNarrow } from '../ui/useNarrow.ts';
 import '../notation/score.css';
 
 const outsideRange = (n: Note) => n.midi < STUDENT_RANGE.low || n.midi > STUDENT_RANGE.high;
@@ -33,8 +34,9 @@ export default function ScalesScreen({ onSceneDim }: { onSceneDim: (dim: number)
   const spellings = useMemo(() => scaleSpellings(tonic, scale.degrees), [tonic, scale]);
   const octave = useMemo(() => oneOctave(spellings), [spellings]);
   const full = useMemo(() => fullRange(spellings), [spellings]);
-  const octaveBars = useMemo(() => [asWhole(octave)], [octave]);
-  const fullBars = useMemo(() => toLines(full, 11), [full]);
+  const narrow = useNarrow();
+  const fullBars = useMemo(() => toLines(full, narrow ? 6 : 11), [full, narrow]);
+  const octaveBars = useMemo(() => (narrow ? toLines(octave, 5) : [asWhole(octave)]), [octave, narrow]);
   const concert = nameOf(writtenToConcert(parseSpelling(tonic)));
 
   useEffect(() => setSelected(null), [tonic, scale]);

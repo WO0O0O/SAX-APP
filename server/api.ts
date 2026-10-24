@@ -32,6 +32,14 @@ export function api(db: DatabaseSync): Hono {
     return c.json(JSON.parse(readFileSync(file, 'utf8')));
   });
 
+  // The original PDFs in sheet-music/, for viewing in the app.
+  app.get('/files/:name', (c) => {
+    const name = c.req.param('name');
+    const file = join(CHARTS_DIR, name);
+    if (!/^[\w.-]+\.pdf$/.test(name) || !existsSync(file)) return c.json({ error: 'no file' }, 404);
+    return c.body(readFileSync(file), 200, { 'content-type': 'application/pdf' });
+  });
+
   // Tune milestone (0-5), best tempo, and whether it's played without a finger chart.
   app.patch('/tunes/:id', async (c) => {
     const id = Number(c.req.param('id'));

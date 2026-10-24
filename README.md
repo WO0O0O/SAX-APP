@@ -18,6 +18,17 @@ alias sax='"/Users/danwooster/1. DEV/SAX_APP/bin/sax"'
 
 On a fresh Mac: install Node 23.6+ (`brew install node`), clone the repo, and add the alias pointing at your clone.
 
+## Online copy (other laptops, phone)
+
+https://wo0o0o.github.io/SAX-APP/ is the same app, rebuilt on every push by GitHub Actions. It has everything except saved progress. Charts and PDFs are published encrypted:
+
+```bash
+npm run seal                  # encrypt sheet-music/ into public/sealed/ (asks for your passphrase)
+git add public/sealed && git commit -m "Update sheet music" && git push
+```
+
+On each device, open Tunes and enter the passphrase once.
+
 ## Development
 
 | Command | What it does |

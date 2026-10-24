@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { noteName } from '../../shared/theory.ts';
-import { getJson, getTunes, logLookup, MILESTONES, slugOf, type Tune } from '../api.ts';
+import { getTunes, loadChart, logLookup, MILESTONES, openPdf, slugOf, type Tune } from '../api.ts';
 import { FingeringCard } from '../fingering/FingeringCard.tsx';
 import { FingeringDiagram } from '../fingering/FingeringDiagram.tsx';
 import { FINGERINGS, describe } from '../fingering/fingerings.ts';
@@ -8,6 +8,10 @@ import { parseChart, type Chart, type ChartFile } from '../music/chart.ts';
 import { Score } from '../notation/Score.tsx';
 import { TuneProgress } from '../tunes/TuneProgress.tsx';
 import { NoteText } from '../ui/NoteText.tsx';
+import { UnlockPanel } from '../ui/UnlockPanel.tsx';
+import { useNarrow } from '../ui/useNarrow.ts';
+import { HOSTED } from '../mode.ts';
+import { LockedError } from '../sealed.ts';
 import '../notation/score.css';
 
 const LOOKUP = '#9a5410';
@@ -22,7 +26,9 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
       return null;
     }
   });
-  const [chart, setChart] = useState<Chart | null | 'missing'>(null);
+  const [chart, setChart] = useState<Chart | null | 'missing' | 'locked'>(null);
+  const [reload, setReload] = useState(0);
+  const narrow = useNarrow();
   const [labels, setLabels] = useState(true);
   const [selected, setSelected] = useState<number | undefined>();
   const [looked, setLooked] = useState<Record<number, string>>({});
@@ -44,12 +50,13 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
     setChart(null);
     setSelected(undefined);
     setLooked({});
-    getJson<ChartFile>(`/api/charts/${slugOf(tune.title)}`)
+    loadChart<ChartFile>(slugOf(tune.title))
       .then((file) => setChart(parseChart(file)))
-      .catch(() => setChart('missing'));
-  }, [tune?.id]);
+      .catch((e) => setChart(e instanceof LockedError ? 'locked' : 'missing'));
+  }, [tune?.id, reload]);
 
-  const items = useMemo(() => (chart && chart !== 'missing' ? chart.bars.flat() : []), [chart]);
+  const loaded = chart && typeof chart === 'object' ? chart : null;
+  const items = useMemo(() => (loaded ? loaded.bars.flat() : []), [loaded]);
   const uniqueNotes = useMemo(() => {
     const byMidi = new Map(items.filter((it) => it.note).map((it) => [it.note!.midi, it.note!]));
     return [...byMidi.values()].sort((a, b) => a.midi - b.midi);
@@ -100,25 +107,47 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
         <div className="min-w-0 space-y-5">
           <section className="panel p-6">
             <h1 className="font-display text-4xl">{tune.title}</h1>
-            {chart && chart !== 'missing' ? (
+            {loaded && (
               <p className="mt-1 text-smoke-dim">
-                Written for alto in <span className="text-smoke">{chart.writtenKey}</span> (concert {chart.concertKey}) · {chart.arranger}
+                Written for alto in <span className="text-smoke">{loaded.writtenKey}</span> (concert {loaded.concertKey}) · {loaded.arranger}
+                {loaded.pdf && (
+                  <>
+                    {' · '}
+                    <button type="button" className="text-brass hover:underline" onClick={() => openPdf(loaded.pdf!)}>
+                      Original PDF
+                    </button>
+                  </>
+                )}
               </p>
-            ) : null}
-            <div className="mt-4">
-              <TuneProgress key={tune.id} tune={tune} onSaved={(t) => setTunes((all) => all.map((x) => (x.id === t.id ? t : x)))} />
-            </div>
-            <p className="mt-2 text-xs text-smoke-dim">Next milestone: {MILESTONES[Math.min(tune.stage + 1, 5)]}</p>
+            )}
+            {HOSTED ? (
+              <p className="mt-3 text-xs text-smoke-dim">Milestones and tempo are saved on your Mac (run `sax` there).</p>
+            ) : (
+              <>
+                <div className="mt-4">
+                  <TuneProgress key={tune.id} tune={tune} onSaved={(t) => setTunes((all) => all.map((x) => (x.id === t.id ? t : x)))} />
+                </div>
+                <p className="mt-2 text-xs text-smoke-dim">Next milestone: {MILESTONES[Math.min(tune.stage + 1, 5)]}</p>
+              </>
+            )}
           </section>
 
-          {chart === 'missing' && (
+          {chart === 'locked' && <UnlockPanel onUnlocked={() => setReload((r) => r + 1)} />}
+
+          {chart === 'missing' && HOSTED && (
+            <section className="panel p-6 text-smoke-dim">
+              No chart published for this tune. On the Mac: transcribe it, run <code className="text-smoke">npm run seal</code>, commit and push.
+            </section>
+          )}
+
+          {chart === 'missing' && !HOSTED && (
             <section className="panel p-6 text-smoke-dim">
               No chart for this tune yet. Put the PDF in <code className="text-smoke">sheet-music/</code> and ask Claude to transcribe it into{' '}
               <code className="text-smoke">sheet-music/{slugOf(tune.title)}.tune.json</code>.
             </section>
           )}
 
-          {chart && chart !== 'missing' && (
+          {loaded && (
             <>
               <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_240px]">
                 <article className="paper px-5 pt-4 pb-2">
@@ -130,11 +159,11 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                     </label>
                   </header>
                   <Score
-                    bars={chart.bars}
-                    chords={chart.chords}
-                    barsPerLine={4}
+                    bars={loaded.bars}
+                    chords={loaded.chords}
+                    barsPerLine={narrow ? 2 : 4}
                     timeSig="4/4"
-                    keySig={chart.keySig}
+                    keySig={loaded.keySig}
                     labels={labels}
                     colors={looked}
                     selected={selected}
@@ -162,7 +191,8 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                   ) : (
                     <div className="py-8">
                       <p className="caps-xs text-smoke-dim">Fingering</p>
-                      <p className="mt-3 text-sm text-smoke-dim">Tap any note in the chart. Each first tap counts as a lookup.</p>
+                      <p className="mt-3 text-sm text-smoke-dim">
+                        {HOSTED ? 'Tap any note in the chart.' : 'Tap any note in the chart. Each first tap counts as a lookup.'}</p>
                     </div>
                   )}
                 </aside>

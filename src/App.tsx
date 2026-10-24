@@ -2,20 +2,23 @@ import { lazy, Suspense, useState } from 'react';
 import { BarScene } from './scene/BarScene.tsx';
 import { NotesScreen } from './screens/NotesScreen.tsx';
 import { ProgressScreen } from './screens/ProgressScreen.tsx';
+import { HOSTED } from './mode.ts';
 
 // VexFlow is large; only load it on the screens that draw notation.
 const ScalesScreen = lazy(() => import('./screens/ScalesScreen.tsx'));
 const ReadingScreen = lazy(() => import('./screens/ReadingScreen.tsx'));
 const TunesScreen = lazy(() => import('./screens/TunesScreen.tsx'));
 
-const SCREENS = [
+const ALL_SCREENS = [
   { id: 'scales', label: 'Scales' },
   { id: 'notes', label: 'All notes' },
   { id: 'tunes', label: 'Tunes' },
   { id: 'reading', label: 'Reading' },
   { id: 'progress', label: 'Progress' },
 ] as const;
-type ScreenId = (typeof SCREENS)[number]['id'];
+type ScreenId = (typeof ALL_SCREENS)[number]['id'];
+// Progress needs the Mac's database, so the online copy leaves it out.
+const SCREENS = ALL_SCREENS.filter((s) => !HOSTED || s.id !== 'progress');
 
 export function App() {
   const [screen, setScreenState] = useState<ScreenId>(
@@ -34,9 +37,9 @@ export function App() {
         <header className="mx-auto flex w-full max-w-[1400px] flex-wrap items-center justify-between gap-3 py-5">
           <div className="flex items-baseline gap-3">
             <span className="font-display text-3xl text-smoke">Sax Tutor</span>
-            <span className="caps-xs hidden text-ember/90 sm:inline">The Late Set</span>
+            <span className="caps-xs hidden text-ember/90 sm:inline">{HOSTED ? 'Online copy' : 'The Late Set'}</span>
           </div>
-          <nav className="flex gap-1 rounded-full bg-ink/70 p-1" aria-label="Screens">
+          <nav className="flex flex-wrap gap-1 rounded-full bg-ink/70 p-1" aria-label="Screens">
             {SCREENS.map((s) => (
               <button
                 key={s.id}

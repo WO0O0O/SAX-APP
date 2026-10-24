@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { ALTO_RANGE, atMidi, nameOf, parseSpelling } from '../../shared/theory.ts';
 import { FingeringCard } from '../fingering/FingeringCard.tsx';
+import { openPdf } from '../api.ts';
 
 // Every written note on the alto, low Bb to high F#, grouped the way the horn works.
 const SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -30,7 +31,11 @@ export function NotesScreen({ onSceneDim }: { onSceneDim: (dim: number) => void 
       <header className="panel p-6">
         <h1 className="font-display text-4xl">Every note on the horn</h1>
         <p className="mt-1 text-smoke-dim">
-          Written pitch, low B♭ to high F♯. Notes with more than one fingering show the alternates. Source: TamingTheSaxophone.com chart.
+          Written pitch, low B♭ to high F♯. Notes with more than one fingering show the alternates. Source:{' '}
+          <button type="button" className="text-brass hover:underline" onClick={() => openPdf('FingeringChart.pdf')}>
+            TamingTheSaxophone.com chart (PDF)
+          </button>
+          .
         </p>
       </header>
       {SECTIONS.map((s) => (

@@ -31,6 +31,20 @@ The work splits like this:
 - **The server is small.** It hands the browser the built app, saves your progress and lookups to a SQLite file, and serves your tune charts. That's about 180 lines of code in total.
 - **Nothing leaves the laptop.** The server only listens on `127.0.0.1` (loopback), so other devices on your wifi can't reach it. There's no login because there's nothing to log in to.
 
+## 1b. Two ways it runs
+
+| | On this Mac (`sax`) | Online copy (GitHub Pages) |
+|---|---|---|
+| URL | http://127.0.0.1:5757 | https://wo0o0o.github.io/SAX-APP/ |
+| Server | Node + SQLite | None: just static files |
+| Scales, All notes, Reading | ✓ | ✓ |
+| Tunes | ✓ charts from `sheet-music/` | ✓ after unlocking with your passphrase |
+| Saves progress and lookups | ✓ | ✗ (Progress tab hidden) |
+
+The online copy is the same code built with `VITE_HOSTED=true` ([src/mode.ts](../src/mode.ts)). In that mode [src/api.ts](../src/api.ts) never calls the server: the tune list comes from [shared/tunes.ts](../shared/tunes.ts), lookups aren't sent, and charts and PDFs are decrypted in the browser (§7.6).
+
+**Deploying:** every push to `main` runs [.github/workflows/pages.yml](../.github/workflows/pages.yml). It installs, runs the tests, builds with the `/SAX-APP/` base path and publishes `dist/` to Pages. Nothing to do by hand.
+
 ## 2. What happens when you type `sax`
 
 `~/.zshrc` has `alias sax='".../SAX_APP/bin/sax"'`. [bin/sax](../bin/sax) is a short zsh script that:
@@ -59,6 +73,9 @@ All files in git are needed. Here's what each is for.
 | `index.html` | The single HTML page. It contains just `<div id="root">` and loads `src/main.tsx`. Vite needs it as the entry point. |
 | `bin/sax` | The launcher described above. |
 | `scripts/backup.ts` | `npm run backup`: copies the database to `data/backups/`. |
+| `scripts/seal.ts` | `npm run seal`: encrypts `sheet-music/` into `public/sealed/` for the online copy. |
+| `public/sealed/` | The encrypted charts and PDFs (safe in a public repo) plus `manifest.json`. Vite copies `public/` into the build as-is. |
+| `.github/workflows/pages.yml` | Builds and publishes the online copy on every push. |
 | `.gitignore` | Keeps `node_modules/`, `dist/`, `data/` and `sheet-music/` out of git. |
 | `README.md` | How to run it. |
 | `CLAUDE.md` | Rules for Claude when working in this repo (written pitch, your range, local-only). |
@@ -85,6 +102,8 @@ All files in git are needed. Here's what each is for.
 | File | Role |
 |---|---|
 | `theory.ts` | Note spelling, transposition, MIDI numbers. The most "music theory" file in the repo. |
+| `seal.ts` | Encryption for the online copy's sheet music (used by the seal script and the browser). |
+| `tunes.ts` | The tune list: seeds the Mac's database and is the online copy's read-only list. |
 | `student.ts` | Your comfortable range (C4–D♯6). Change it here when it grows. |
 
 ### `src/` (front end)
@@ -92,7 +111,8 @@ All files in git are needed. Here's what each is for.
 |---|---|
 | `main.tsx`, `App.tsx` | Boot React; the top bar and tab switching. |
 | `index.css` | Colour tokens, fonts, the `panel` / `caps` styles. |
-| `api.ts` | The browser's side of the API: `getTunes`, `updateTune`, `logLookup`. |
+| `api.ts` | The browser's side of the API: `getTunes`, `updateTune`, `logLookup`, `loadChart`, `openPdf`. Switches behaviour in the online copy. |
+| `mode.ts`, `sealed.ts` | Online-copy flag; unlocking and decrypting sealed files. |
 | `screens/` | One file per tab: Scales, All notes, Tunes, Reading, Progress. |
 | `music/` | Scale library (`scales.ts`), building scales across the horn (`build.ts`), the sight-reading generator (`exercise.ts`), the tune chart format (`chart.ts`), the circle-of-fifths dial and scale picker. |
 | `fingering/` | Fingering data for every note (`fingerings.ts`), the key diagram, the fingering card. |
@@ -160,6 +180,7 @@ schema_migrations  which migration files have run
 | `POST /api/lookup` | `{ midi }`: add 1 to that note's lookup count | Tapping a note in Reading or Tunes |
 | `GET /api/notes` | All lookup counts | Progress |
 | `GET /api/charts/:slug` | Reads `sheet-music/<slug>.tune.json` | Tunes |
+| `GET /api/files/:name` | Serves a PDF from `sheet-music/` | "Original PDF" links |
 
 Two details worth noticing:
 - **The lookup is an "upsert"** (insert or update in one statement), so a note's row is created on its first lookup:
@@ -179,7 +200,8 @@ There are three places, each for a different kind of thing.
 |---|---|---|
 | Tune milestones, best tempo, "played without a chart", fingering lookups per note | **SQLite**, `data/sax.db` | Permanent; survives restarts, rebuilds and git pulls. |
 | Last key + scale you picked; last tune you opened | **Browser localStorage** (`sax.picker.v1`, `sax.tune.v1`) | Convenience only. Clearing browser data just resets your picks. |
-| Tune charts | **Files**, `sheet-music/*.tune.json` | Read-only for the app; created by transcription. |
+| Tune charts and PDFs | **Files**, `sheet-music/` (and encrypted copies in `public/sealed/`) | Read-only for the app; created by transcription. |
+| Unlock key for the online copy | **Browser localStorage** on each device (`sax.key.v1`) | Until you clear site data; then enter the passphrase again. |
 
 **Not saved yet:** notes marked "fumbled", and the exercises you've played. Both reset when you leave the page.
 
@@ -267,7 +289,16 @@ Charts are plain text tokens, one string per bar, so they're easy to transcribe 
 
 A test parses each chart and checks that every bar adds up to exactly 4 beats, which catches most transcription slips.
 
-### 7.6 The backdrop ([src/scene/BarScene.tsx](../src/scene/BarScene.tsx))
+### 7.6 Sealed sheet music for a public site ([shared/seal.ts](../shared/seal.ts), [scripts/seal.ts](../scripts/seal.ts), [src/sealed.ts](../src/sealed.ts))
+GitHub Pages sites are always public, and the charts are other people's arrangements, so only encrypted copies are published:
+
+- **Key:** your passphrase goes through PBKDF2-SHA256 (250,000 rounds, random salt) to make an AES-256 key. The rounds make guessing passphrases slow.
+- **Files:** each file is encrypted with AES-GCM and a fresh random IV. GCM also detects a wrong key or tampering, so decryption fails loudly rather than returning garbage.
+- **Manifest:** `manifest.json` holds the salt, the list of files with their SHA-256, and a `check` value (the encrypted text `sax-tutor`). The browser can check a passphrase without downloading any charts, and `npm run seal` only re-encrypts files whose hash changed, which keeps git diffs small.
+- **In the browser:** Web Crypto derives the key once, and the **derived key** (not your passphrase) is kept in localStorage. Charts are decrypted to JSON; PDFs to a temporary `blob:` URL opened in a new tab.
+- **What's visible publicly:** file names and sizes, nothing else. Use a passphrase you don't use anywhere else.
+
+### 7.7 The backdrop ([src/scene/BarScene.tsx](../src/scene/BarScene.tsx))
 One SVG made of:
 - a gradient room;
 - soft "bokeh" lights (circles filled with a radial gradient that fades to transparent);
@@ -301,7 +332,7 @@ It stays cheap to run because animations only change `transform` and `opacity`, 
 
 | You want to… | Do this |
 |---|---|
-| Add a tune chart | Put the PDF in `sheet-music/` and ask Claude to transcribe it to `sheet-music/<slug>.tune.json`, where the slug is the title in lowercase with dashes. Run `npm test` to check the bar lengths. |
+| Add a tune chart | Put the PDF in `sheet-music/` and ask Claude to transcribe it to `sheet-music/<slug>.tune.json`, where the slug is the title in lowercase with dashes. Run `npm test` to check the bar lengths. For the online copy: `npm run seal`, commit `public/sealed/`, push. |
 | Add a tune to the list | Add a row to `tunes` and `tune_progress` with a new migration (or ask Claude). |
 | Add or edit a scale | Add an entry to `SCALES` in `src/music/scales.ts` (degrees + sound / use / songs). It appears everywhere automatically. |
 | Widen your range | Change `shared/student.ts`. Grey "stretch" notes and the Reading generator follow it. |

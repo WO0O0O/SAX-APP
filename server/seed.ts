@@ -1,15 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { transaction } from './db.ts';
-
-// [title, concert key, status]. Concert keys from the charts in sheet-music/; null = not confirmed yet.
-const TUNES: [string, string | null, 'active' | 'queued'][] = [
-  ['Autumn Leaves', 'G minor', 'active'],
-  ['Naima', null, 'active'],
-  ['Smooth Operator', 'F minor', 'active'],
-  ['So What', 'D Dorian', 'queued'],
-  ['In a Sentimental Mood', null, 'queued'],
-  ['12-bar blues', 'F', 'queued'],
-];
+import { TUNES } from '../shared/tunes.ts';
 
 /** Fills a fresh database with the tune list. No-op once tunes exist. */
 export function seed(db: DatabaseSync): void {
