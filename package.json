@@ -1,0 +1,35 @@
+{
+  "name": "sax-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"node --watch --disable-warning=ExperimentalWarning server/index.ts\" \"vite\"",
+    "build": "vite build",
+    "start": "npm run build && node --disable-warning=ExperimentalWarning server/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "backup": "node --disable-warning=ExperimentalWarning scripts/backup.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "hono": "^4.13.13",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "concurrently": "^10.0.6",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^4.1.11"
+  }
+}

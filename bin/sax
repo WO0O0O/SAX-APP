@@ -1,0 +1,35 @@
+#!/bin/zsh
+# Starts Sax Tutor and opens it in the browser. Ctrl+C stops it.
+# Installs dependencies and rebuilds automatically when needed.
+set -e
+
+DIR="$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)"
+cd "$DIR"
+PORT="${SAX_PORT:-5757}"
+URL="http://127.0.0.1:$PORT"
+
+if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+  echo "Sax Tutor is already running. Opening $URL"
+  open "$URL"
+  exit 0
+fi
+
+if [[ ! -d node_modules || package-lock.json -nt node_modules/.package-lock.json ]]; then
+  echo "Installing dependencies…"
+  npm ci --no-audit --no-fund
+fi
+
+if [[ ! -f dist/index.html || -n "$(find src shared index.html vite.config.ts -newer dist/index.html -print -quit)" ]]; then
+  echo "Building…"
+  npm run build --silent
+fi
+
+# Open the browser once the server answers.
+(
+  for _ in {1..100}; do
+    if curl -sf "$URL/api/health" >/dev/null; then open "$URL"; break; fi
+    sleep 0.1
+  done
+) &
+
+exec node --disable-warning=ExperimentalWarning server/index.ts

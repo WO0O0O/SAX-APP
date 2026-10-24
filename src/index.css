@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+
+/* Placeholder tokens. Replaced by the design system in Phase 0.5 (docs/design.md). */
+@theme {
+  --color-bar-black: #120c0a;
+  --color-bar-brown: #3b2418;
+  --color-bar-red: #7a1414;
+  --color-smoke: #efe6da;
+}
+
+body {
+  background: var(--color-bar-black);
+  color: var(--color-smoke);
+}
