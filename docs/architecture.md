@@ -10,13 +10,13 @@ The same React app runs in two places. **Almost everything happens in the browse
 
 ```
  ONLINE COPY (any device)                      ON THE MAC (`sax`)
- https://wo0o0o.github.io/SAX-APP/             http://127.0.0.1:5757
+ https://sax.wo0.dev                           http://127.0.0.1:5757
 
- git push ─▶ GitHub Actions                    bin/sax ─▶ builds dist/ if needed
-            (test + build on Vercel or Pages)             │
+ git push ─▶ Vercel                            bin/sax ─▶ builds dist/ if needed
+            (npm test + build)                            │
                  │                                        ▼
                  ▼                             node server/index.ts (Hono)
-          GitHub Pages: static files            ├─ serves dist/
+          Vercel: static files                  ├─ serves dist/
           (dist/ + public/sealed/*.bin)         ├─ /api/* ─▶ data/sax.db (SQLite)
                  │                              └─ /api/charts, /api/files ─▶ sheet-music/
                  ▼                                        │
@@ -42,9 +42,7 @@ The same React app runs in two places. **Almost everything happens in the browse
 - charts and PDFs are fetched encrypted and decrypted in the browser (§7.6);
 - the Progress tab and milestone editor are hidden.
 
-**Deploying** is automatic on every push to `main`:
-- **Vercel** (custom domain) reads [vercel.json](../vercel.json): `npm ci`, then `npm test && npm run build`, then serves `dist/` with a few security headers. A failing test stops the deploy.
-- **GitHub Pages** ([.github/workflows/pages.yml](../.github/workflows/pages.yml)) does the same, building under the `/SAX-APP/` path.
+**Deploying** is automatic: on every push to `main`, Vercel reads [vercel.json](../vercel.json), runs `npm ci`, then `npm test && npm run build`, and serves `dist/` at https://sax.wo0.dev with a few security headers. A failing test stops the deploy and the previous version stays live. Other branches get their own preview URLs. The domain is a CNAME for `sax` on name.com pointing at Vercel.
 
 ## 2. What happens when you type `sax`
 
@@ -76,8 +74,7 @@ All files in git are needed. Here's what each is for.
 | `scripts/backup.ts` | `npm run backup`: copies the database to `data/backups/`. |
 | `scripts/seal.ts` | `npm run seal`: encrypts `sheet-music/` into `public/sealed/` for the online copy. |
 | `public/sealed/` | The encrypted charts and PDFs (safe in a public repo) plus `manifest.json`. Vite copies `public/` into the build as-is. |
-| `.github/workflows/pages.yml` | Builds and publishes the GitHub Pages copy on every push. |
-| `vercel.json` | Build settings and security headers for the Vercel copy. |
+| `vercel.json` | Build settings and security headers for the online copy on Vercel. |
 | `.gitignore` | Keeps `node_modules/`, `dist/`, `data/` and `sheet-music/` out of git. |
 | `README.md` | How to run it. |
 | `CLAUDE.md` | Rules for Claude when working in this repo (written pitch, your range, the two run modes). |
@@ -295,7 +292,7 @@ Charts are plain text tokens, one string per bar, so they're easy to transcribe 
 A test parses each chart and checks that every bar adds up to exactly 4 beats, which catches most transcription slips.
 
 ### 7.6 Sealed sheet music for a public site ([shared/seal.ts](../shared/seal.ts), [scripts/seal.ts](../scripts/seal.ts), [src/sealed.ts](../src/sealed.ts))
-GitHub Pages sites are always public, and the charts are other people's arrangements, so only encrypted copies are published:
+The site is public, and the charts are other people's arrangements, so only encrypted copies are published:
 
 - **Key:** your passphrase goes through PBKDF2-SHA256 (250,000 rounds, random salt) to make an AES-256 key. The rounds make guessing passphrases slow.
 - **Files:** each file is encrypted with AES-GCM and a fresh random IV. GCM also detects a wrong key or tampering, so decryption fails loudly rather than returning garbage.

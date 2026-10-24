@@ -1,10 +1,10 @@
 # Status (living file: update every session)
 
 **Last updated:** 2026-10-24
-**State:** in daily use; development paused (2026-10-24). Online copy on Vercel (custom subdomain of wo0.dev, being set up) and GitHub Pages (https://wo0o0o.github.io/SAX-APP/); progress saved only on the Mac via `sax`. How it's built: [architecture.md](architecture.md).
+**State:** in daily use; development paused (2026-10-24). Online at https://sax.wo0.dev (Vercel, any device, nothing saved); progress saved only on the Mac via `sax`. How it's built: [architecture.md](architecture.md).
 
 ## What the app is
-Free practice areas, no timers. Fingerings for every written note are the core, plus scales from the circle of fifths across the whole horn, his tune charts, and generated sight-reading. Two ways to run it: the online copy on Vercel / GitHub Pages (static, sheet music encrypted, nothing saved) and `sax` on the Mac (local server + SQLite, the only place progress is saved).
+Free practice areas, no timers. Fingerings for every written note are the core, plus scales from the circle of fifths across the whole horn, his tune charts, and generated sight-reading. Two ways to run it: the online copy at sax.wo0.dev (static, sheet music encrypted, nothing saved) and `sax` on the Mac (local server + SQLite, the only place progress is saved).
 
 ## Decisions
 - Progress data stays on the Mac only: 127.0.0.1 + SQLite file, no auth, no cloud database. Other devices use the online copy without saving. (2026-10-24)
@@ -18,7 +18,7 @@ Free practice areas, no timers. Fingerings for every written note are the core, 
 - `sheet-music/` (PDFs + transcribed `*.tune.json` charts) is git-ignored: other people's arrangements. (2026-10-24)
 - Schema trimmed to tunes, tune_progress, notes_progress (migration 003); timed-session tables dropped. `app-spec.md` and `plan.md` retired; their live content is here and in `architecture.md`. (2026-10-24)
 - Online copy (static, no server, Progress hidden); sheet music published encrypted with a passphrase (`npm run seal`). Phone: dropdown scale picker, fewer bars per line. (2026-10-24)
-- Vercel deploy via `vercel.json` (tests run before build, security headers). Online mode is detected from the address (not localhost = online), so no host settings are needed. (2026-10-24)
+- Hosted on Vercel at **sax.wo0.dev** (CNAME on name.com); GitHub Pages copy retired. Deploy via `vercel.json` (tests run before build, security headers). Online mode is detected from the address (not localhost = online), so no host settings are needed. (2026-10-24)
 - Local API hardened against DNS rebinding (Host check) and cross-site posts (JSON-only writes). (2026-10-24)
 
 ## Built
@@ -30,7 +30,6 @@ Free practice areas, no timers. Fingerings for every written note are the core, 
 - Tests: transposition, spelling, scales, generator, charts, fingerings, DB, API.
 
 ## Open questions
-- Custom domain: finish the `sax.wo0.dev` (or similar) CNAME on name.com, then point README/docs at it and retire the GitHub Pages copy (delete `.github/workflows/pages.yml`, unpublish in repo settings).
 - Plain copies of `autumn-leaves-easy.pdf` and `smooth-operator-sade.pdf` remain in the first commit's history. The student chose to leave them; a history rewrite + force push would remove them.
 - Passphrase strength decides how well the sealed sheet music is protected (see architecture.md §7.6).
 - Naima and In a Sentimental Mood: no charts yet (add PDFs to `sheet-music/`).

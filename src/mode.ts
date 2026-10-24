@@ -1,4 +1,4 @@
-// "Hosted" = the online copy (Vercel / GitHub Pages): no server, nothing saved, sheet music decrypted
+// "Hosted" = the online copy (sax.wo0.dev on Vercel): no server, nothing saved, sheet music decrypted
 // in the browser. Detected from the address, so no build settings are needed on the host:
 // the Mac version only ever runs on 127.0.0.1 / localhost.
 const LOCAL_HOSTS = ['127.0.0.1', 'localhost', '[::1]'];

@@ -2,7 +2,7 @@
 
 A personal alto sax practice app: every fingering on the horn, scales from the circle of fifths across the whole range, my tune charts, and generated sight-reading. All notation is in **written alto pitch**.
 
-**Open it:** https://wo0o0o.github.io/SAX-APP/ (any browser: laptop, work laptop, phone)
+**Open it:** https://sax.wo0.dev (any browser: laptop, work laptop, phone)
 
 ![Scales: circle of fifths, scale description and notation](docs/images/scales.jpg)
 
@@ -21,7 +21,7 @@ A personal alto sax practice app: every fingering on the horn, scales from the c
 ## Two ways to use it
 
 ### Option 1: just open the link
-https://wo0o0o.github.io/SAX-APP/ works in any browser with nothing to install. Everything works except saving progress. The Tunes tab asks for the sheet-music passphrase once per device.
+https://sax.wo0.dev works in any browser with nothing to install. Everything works except saving progress. The Tunes tab asks for the sheet-music passphrase once per device.
 
 ### Option 2: set it up on your own Mac (to save progress and add music)
 Only needed if you want to **save progress** (tune milestones, fingering lookups) or **add or change sheet music** on the site.
@@ -77,7 +77,7 @@ Environment: `SAX_PORT` (default 5757), `SAX_DATA_DIR` (default `./data`).
 - `src/`: the React app (everything you see, plus the music theory and fingerings).
 - `shared/`: code used by both browser and server (note spelling, transposition, encryption, tune list).
 - `server/`: the Mac-only API and SQLite database.
-- `vercel.json`, `.github/workflows/pages.yml`: how the online copy is built and deployed.
+- `vercel.json`: how the online copy is built and deployed on Vercel (every push to `main`).
 - `public/sealed/`: encrypted sheet music for the online copy.
 - `docs/`: start with [status.md](docs/status.md); [architecture.md](docs/architecture.md) explains how it all works.
 
