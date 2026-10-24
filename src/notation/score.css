@@ -1,4 +1,9 @@
+/* VexFlow adds its own invisible hit rects; only ours should take clicks. */
+.score svg * {
+  pointer-events: none;
+}
 .score .note-hit {
+  pointer-events: all;
   fill: transparent;
   stroke: none;
   cursor: pointer;
@@ -26,4 +31,8 @@
   border-radius: 12px;
   background-image: radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.35), transparent 60%);
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.35) inset, 0 24px 60px -30px rgb(0 0 0 / 0.9);
+}
+.score .chord {
+  font: 600 15px var(--font-sans);
+  fill: var(--color-paper-ink);
 }

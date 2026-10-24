@@ -9,6 +9,7 @@ import { generateExercise } from '../music/exercise.ts';
 import { ScalePicker } from '../music/ScalePicker.tsx';
 import { usePicker } from '../music/usePicker.ts';
 import { NoteText } from '../ui/NoteText.tsx';
+import { logLookup } from '../api.ts';
 import '../notation/score.css';
 
 type Mode = 'check' | 'fumble';
@@ -32,7 +33,7 @@ export default function ReadingScreen({ onSceneDim }: { onSceneDim: (dim: number
     () => generateExercise({ spellings: scaleSpellings(tonic, scale.degrees), low: STUDENT_RANGE.low, high: STUDENT_RANGE.high, bars, seed }),
     [tonic, scale, bars, seed],
   );
-  const notes = useMemo(() => exercise.flat().map((it) => it.note), [exercise]);
+  const notes = useMemo(() => exercise.flat().map((it) => it.note!), [exercise]);
 
   // A fresh exercise resets the marks.
   useEffect(() => {
@@ -51,11 +52,7 @@ export default function ReadingScreen({ onSceneDim }: { onSceneDim: (dim: number
         setSelected(i);
         if (!marks[i]) {
           setMarks((m) => ({ ...m, [i]: 'lookup' }));
-          fetch('/api/lookup', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ midi: notes[i].midi }),
-          }).catch(() => {});
+          logLookup(notes[i].midi);
         }
       } else {
         setMarks((m) => {
@@ -84,7 +81,7 @@ export default function ReadingScreen({ onSceneDim }: { onSceneDim: (dim: number
 
   return (
     <div className="mx-auto grid w-full max-w-[1400px] items-start gap-5 lg:grid-cols-[290px_minmax(0,1fr)]">
-      <aside className="lg:sticky lg:top-4">
+      <aside className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-[14px]">
         <ScalePicker picker={picker} />
       </aside>
 

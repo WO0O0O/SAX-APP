@@ -25,6 +25,12 @@
 - Illustrated band rejected (looked AI-generated). Backdrop is now abstract light ribbons + bokeh. UI back to normal sizes.
 - Fingerings are the core. Data now covers the whole horn (B♭3–F♯6) with alternates, from `sheet-music/FingeringChart.pdf`.
 
+## Added 2026-10-24 (second review)
+- **Tunes** screen: Autumn Leaves (pickup + 32 bars, chords) and Smooth Operator (9 bars) transcribed from the Online Sax Academy PDFs into `sheet-music/*.tune.json` (git-ignored, served by `/api/charts/:slug`). Tap a note for its fingering; every note in the tune as fingering cards; note names toggle.
+- **Progress** is editable: milestone 0-5, best tempo, "played without a finger chart" per tune (also on the Tunes screen). Lookups per note chart.
+- Fixed: notes weren't tappable (VexFlow's invisible rects caught clicks). Sidebar scrolls on its own.
+- To add a tune: put the PDF in `sheet-music/` and ask Claude to transcribe it to `<slug>.tune.json` (format in `src/music/chart.ts`).
+
 ## Built
 - **Scales:** circle of fifths, 21 scales with sound / use / songs, one octave + whole-horn notation, fingering card per note.
 - **All notes:** every note with alternates.

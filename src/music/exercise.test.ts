@@ -14,13 +14,14 @@ describe('exercise generator', () => {
         expect(bars).toHaveLength(4);
         for (const bar of bars) {
           expect(bar.reduce((sum, it) => sum + BEATS[it.duration], 0)).toBe(4);
-          for (const { note } of bar) {
+          for (const it of bar) {
+            const note = it.note!;
             expect(note.midi).toBeGreaterThanOrEqual(60);
             expect(note.midi).toBeLessThanOrEqual(87);
             expect(spellings.some((s) => s.letter === note.letter && s.acc === note.acc)).toBe(true);
           }
         }
-        expect(bars.at(-1)!.at(-1)!.note.midi % 12).toBe(3); // Eb
+        expect(bars.at(-1)!.at(-1)!.note!.midi % 12).toBe(3); // Eb
       }
     });
   }

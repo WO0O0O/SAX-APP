@@ -6,10 +6,12 @@ import { ProgressScreen } from './screens/ProgressScreen.tsx';
 // VexFlow is large; only load it on the screens that draw notation.
 const ScalesScreen = lazy(() => import('./screens/ScalesScreen.tsx'));
 const ReadingScreen = lazy(() => import('./screens/ReadingScreen.tsx'));
+const TunesScreen = lazy(() => import('./screens/TunesScreen.tsx'));
 
 const SCREENS = [
   { id: 'scales', label: 'Scales' },
   { id: 'notes', label: 'All notes' },
+  { id: 'tunes', label: 'Tunes' },
   { id: 'reading', label: 'Reading' },
   { id: 'progress', label: 'Progress' },
 ] as const;
@@ -55,6 +57,7 @@ export function App() {
           <Suspense fallback={null}>
             {screen === 'scales' && <ScalesScreen onSceneDim={setDim} />}
             {screen === 'notes' && <NotesScreen onSceneDim={setDim} />}
+            {screen === 'tunes' && <TunesScreen onSceneDim={setDim} />}
             {screen === 'reading' && <ReadingScreen onSceneDim={setDim} />}
             {screen === 'progress' && <ProgressScreen onSceneDim={setDim} />}
           </Suspense>

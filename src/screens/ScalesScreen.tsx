@@ -51,7 +51,7 @@ export default function ScalesScreen({ onSceneDim }: { onSceneDim: (dim: number)
 
   return (
     <div className="mx-auto grid w-full max-w-[1400px] items-start gap-5 lg:grid-cols-[290px_minmax(0,1fr)]">
-      <aside className="lg:sticky lg:top-4">
+      <aside className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-[14px]">
         <ScalePicker picker={picker} />
       </aside>
 

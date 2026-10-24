@@ -61,3 +61,12 @@ export const nameOf = (s: Spelling) => LETTERS[s.letter] + ACC_TEXT[s.acc];
 export const asciiOf = (s: Spelling) => LETTERS[s.letter] + ACC_ASCII[s.acc];
 /** 'F♯4'. */
 export const noteName = (n: Note) => `${nameOf(n)}${n.octave}`;
+
+/** 'F#5' / 'Bb3' -> Note. */
+export function parseNote(text: string): Note {
+  const m = /^([A-G](?:#{1,2}|b{1,2})?)(-?\d)$/.exec(text);
+  if (!m) throw new Error(`Bad note: ${text}`);
+  const s = parseSpelling(m[1]);
+  const octave = Number(m[2]);
+  return { ...s, octave, midi: (octave + 1) * 12 + NATURAL_PC[s.letter] + s.acc };
+}
