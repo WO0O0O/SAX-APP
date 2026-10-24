@@ -125,6 +125,7 @@ All files in git are needed. Here's what each is for.
 |---|---|
 | `status.md` | **Start here.** Where things stand, decisions, what's next. |
 | `architecture.md` | This file. |
+| `sheet-music.md` | How a PDF becomes the interactive chart on the Tunes tab, with diagrams. |
 | `overview.md` | Who it's for, goals, the 3-month test. |
 | `curriculum.md` | The teaching plan the Claude tutor follows. The app doesn't enforce it. |
 | `tutor-instructions.md` | Paste into the Claude tutor project. |
@@ -280,6 +281,8 @@ After all bars are drawn, **ties** are added. A tie across a line break becomes 
 Tests run every scale × 25 seeds and check that the notes stay in range, stay in the scale, make 4 beats per bar and end on the tonic.
 
 ### 7.5 The tune chart format ([src/music/chart.ts](../src/music/chart.ts))
+
+> The full walkthrough, from PDF to transcription, encryption, rendering and tapping, with diagrams, is in [sheet-music.md](sheet-music.md).
 Charts are plain text tokens, one string per bar, so they're easy to transcribe and to read in a diff:
 
 ```json
