@@ -1,0 +1,118 @@
+.scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: var(--color-night);
+}
+.scene svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.scene-dim {
+  position: absolute;
+  inset: 0;
+  background: var(--color-night);
+  transition: opacity 1.2s ease;
+}
+
+.scene .sway,
+.scene .nod,
+.scene .bob,
+.scene .bob-fast,
+.scene .laugh-left,
+.scene .laugh-right,
+.scene .puff,
+.scene .flicker,
+.scene .flicker-slow,
+.scene .ember,
+.scene .wisp,
+.scene .shimmer {
+  transform-box: view-box;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.scene .sway { animation-name: sway; animation-duration: 5.6s; animation-direction: alternate; }
+.scene .nod { animation-name: nod; animation-duration: 1.4s; }
+.scene .bob { animation-name: bob; animation-duration: 1.4s; }
+.scene .bob-fast { animation-name: bob; animation-duration: 0.7s; }
+.scene .laugh-left { animation-name: laugh-left; animation-duration: 9s; }
+.scene .laugh-right { animation-name: laugh-right; animation-duration: 9s; animation-delay: 0.15s; }
+.scene .puff { animation-name: drift; animation-timing-function: linear; }
+.scene .flicker { animation-name: flicker; animation-duration: 4.5s; }
+.scene .flicker-slow { animation-name: flicker; animation-duration: 9s; }
+.scene .ember { animation-name: ember; animation-duration: 3s; }
+.scene .wisp { animation-name: wisp; animation-duration: 7.5s; animation-timing-function: linear; }
+.scene .shimmer { animation-name: shimmer; animation-duration: 0.7s; }
+
+/* Work screens: keep the room alive but quiet. */
+.scene[data-calm] .nod,
+.scene[data-calm] .bob,
+.scene[data-calm] .bob-fast,
+.scene[data-calm] .laugh-left,
+.scene[data-calm] .laugh-right,
+.scene[data-calm] .shimmer {
+  animation-play-state: paused;
+}
+
+/* Tab hidden: stop everything (set in main.tsx). */
+html[data-hidden] .scene * {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene * {
+    animation: none !important;
+  }
+}
+
+@keyframes sway {
+  from { transform: rotate(-2.5deg); }
+  to { transform: rotate(2deg); }
+}
+@keyframes nod {
+  0%, 100% { transform: rotate(0); }
+  50% { transform: rotate(5deg); }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes laugh-left {
+  0%, 68%, 100% { transform: rotate(0); }
+  74% { transform: rotate(-9deg); }
+  80% { transform: rotate(-4deg); }
+  86% { transform: rotate(-9deg); }
+}
+@keyframes laugh-right {
+  0%, 68%, 100% { transform: rotate(0); }
+  74% { transform: rotate(8deg) translateY(-3px); }
+  80% { transform: rotate(3deg); }
+  86% { transform: rotate(8deg) translateY(-3px); }
+}
+@keyframes drift {
+  0% { transform: translate(0, 0) scale(0.7); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(var(--dx), -320px) scale(1.8); opacity: 0; }
+}
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  40% { opacity: 0.86; }
+  55% { opacity: 0.96; }
+  70% { opacity: 0.88; }
+}
+@keyframes ember {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes wisp {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: 0.35; }
+  100% { transform: translate(14px, -70px); opacity: 0; }
+}
+@keyframes shimmer {
+  0%, 100% { opacity: 0.12; }
+  50% { opacity: 0.55; }
+}

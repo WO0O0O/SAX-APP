@@ -1,79 +1,64 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
+import { BarScene } from './scene/BarScene.tsx';
+import { SessionScreen } from './screens/SessionScreen.tsx';
+import { ProgressScreen } from './screens/ProgressScreen.tsx';
 
-type Profile = { display_name: string; written_range_low: string; written_range_high: string };
-type Note = { pitch: string; unlocked: number };
-type Progress = {
-  tracks: { track: string; stage: string }[];
-  tunes: { id: number; title: string; status: string; stage: number }[];
-};
-type Data = { profile: Profile; notes: Note[]; progress: Progress };
+// VexFlow is large; only load it when the reading screen opens.
+const ReadingScreen = lazy(() => import('./screens/ReadingScreen.tsx'));
 
-async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(path);
-  if (!res.ok) throw new Error(`${path}: ${res.status}`);
-  return res.json() as Promise<T>;
-}
+const SCREENS = [
+  { id: 'session', label: 'Session' },
+  { id: 'reading', label: 'Reading' },
+  { id: 'progress', label: 'Progress' },
+] as const;
+type ScreenId = (typeof SCREENS)[number]['id'];
 
-// Phase 0 shell: proves the server, database and seed are wired up. Real screens come in Phase 1.
 export function App() {
-  const [data, setData] = useState<Data | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    Promise.all([
-      getJson<Profile>('/api/profile'),
-      getJson<Note[]>('/api/notes'),
-      getJson<Progress>('/api/progress'),
-    ])
-      .then(([profile, notes, progress]) => setData({ profile, notes, progress }))
-      .catch((e: Error) => setError(e.message));
-  }, []);
-
-  if (error) return <main className="p-10 text-2xl">Can't reach the app server: {error}</main>;
-  if (!data) return <main className="p-10 text-2xl">Loading…</main>;
-
-  const { profile, notes, progress } = data;
-  const unlocked = notes.filter((n) => n.unlocked);
+  const [screen, setScreenState] = useState<ScreenId>(
+    () => SCREENS.find((s) => `#${s.id}` === location.hash)?.id ?? 'session',
+  );
+  const setScreen = (id: ScreenId) => {
+    history.replaceState(null, '', `#${id}`);
+    setScreenState(id);
+  };
+  const [dim, setDim] = useState(0.55);
 
   return (
-    <main className="mx-auto max-w-4xl space-y-10 p-10 text-xl">
-      <h1 className="text-5xl font-bold text-bar-red">Sax Tutor</h1>
+    <>
+      <BarScene dim={dim} />
+      <div className="flex min-h-screen flex-col px-8 pb-6">
+        <header className="flex items-center justify-between py-6">
+          <div className="flex items-baseline gap-4">
+            <span className="font-display text-4xl text-smoke">Sax Tutor</span>
+            <span className="caps hidden text-ember/90 sm:inline">The Late Set</span>
+          </div>
+          <nav className="flex gap-1 rounded-full bg-ink/70 p-1.5" aria-label="Screens">
+            {SCREENS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                aria-current={screen === s.id ? 'page' : undefined}
+                onClick={() => setScreen(s.id)}
+                className={`min-h-12 rounded-full px-6 font-semibold transition-colors ${
+                  screen === s.id ? 'bg-smoke text-ink' : 'text-smoke-dim hover:text-smoke'
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </nav>
+        </header>
 
-      <section>
-        <h2 className="mb-2 text-2xl font-semibold">Range (written)</h2>
-        <p>
-          {profile.written_range_low} to {profile.written_range_high}
-        </p>
-      </section>
-
-      <section>
-        <h2 className="mb-2 text-2xl font-semibold">
-          Unlocked notes ({unlocked.length} of {notes.length})
-        </h2>
-        <p className="font-mono">{unlocked.map((n) => n.pitch).join('  ')}</p>
-      </section>
-
-      <section>
-        <h2 className="mb-2 text-2xl font-semibold">Current stages</h2>
-        <ul>
-          {progress.tracks.map((t) => (
-            <li key={t.track}>
-              {t.track}: {t.stage}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section>
-        <h2 className="mb-2 text-2xl font-semibold">Tunes</h2>
-        <ul>
-          {progress.tunes.map((t) => (
-            <li key={t.id}>
-              {t.title} <span className="opacity-60">({t.status}, milestone {t.stage}/5)</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </main>
+        <main className="flex flex-1 flex-col">
+          {screen === 'session' && <SessionScreen onSceneDim={setDim} />}
+          {screen === 'reading' && (
+            <Suspense fallback={null}>
+              <ReadingScreen onSceneDim={setDim} />
+            </Suspense>
+          )}
+          {screen === 'progress' && <ProgressScreen onSceneDim={setDim} />}
+        </main>
+      </div>
+    </>
   );
 }

@@ -1,14 +1,53 @@
 @import 'tailwindcss';
 
-/* Placeholder tokens. Replaced by the design system in Phase 0.5 (docs/design.md). */
+/* Design tokens: docs/design.md */
 @theme {
-  --color-bar-black: #120c0a;
-  --color-bar-brown: #3b2418;
-  --color-bar-red: #7a1414;
+  --color-ink: #0b0706;
+  --color-night: #140c09;
+  --color-mahogany: #2a1810;
+  --color-walnut: #4a2c1c;
+  --color-leather: #6b3e26;
+  --color-oxblood: #6e0f14;
+  --color-wine: #8f1d22;
+  --color-ember: #e0863a;
+  --color-brass: #c9a25b;
   --color-smoke: #efe6da;
+  --color-smoke-dim: #a89d91;
+  --color-paper: #f3e9d6;
+  --color-paper-ink: #1a1210;
+  --color-lookup: #9a5410;
+
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-sans: 'Figtree Variable', system-ui, sans-serif;
+}
+
+html {
+  font-size: 20px;
 }
 
 body {
-  background: var(--color-bar-black);
+  background: var(--color-night);
   color: var(--color-smoke);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-brass);
+  outline-offset: 3px;
+}
+
+@utility caps {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+@utility panel {
+  background: color-mix(in srgb, var(--color-mahogany) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-walnut) 80%, transparent);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px -20px rgb(0 0 0 / 0.8);
 }
