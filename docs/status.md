@@ -1,7 +1,7 @@
 # Status (living file: update every session)
 
 **Last updated:** 2026-10-24
-**Current phase:** Phase 0 signed off. Phase 0.5 (design) built, awaiting student review.
+**Current phase:** Phase 1 re-planned as free practice areas. Scales, All notes and Reading built; awaiting student review.
 
 ## Decisions
 - Local-only app: localhost (127.0.0.1) + SQLite file, no auth, no cloud. (2026-10-24)
@@ -20,22 +20,28 @@
 - Seed: profile (range C4-D#6), 28 notes with R1 (G4, A4, B4) unlocked, tracks at R1/T1/J1, 6 tunes (3 active).
 - `npm run backup`, README, tests for pitch maths and migrate/seed.
 
-## Phase 0.5 delivered (prototype, mock data)
-- `src/scene/BarScene.tsx`: animated club scene (band, tables, smoke), dims on work screens, pauses when hidden, off for reduced motion.
-- Session screen: block timer, rest screen with the band in view, fatigue button -> off-horn view. Space / N shortcuts.
-- Reading screen: R1 exercise in VexFlow on a cream card, tap to check fingering (logs a lookup) or mark fumbled, schematic fingering diagram.
-- Progress screen: seeded data, styled.
-- Fingering table for the whole range except C#4 (`src/fingering/fingerings.ts`), tested.
+## Changed 2026-10-24 (student feedback on the prototype)
+- Dropped timed sessions, block timers, rests and the fatigue button: he practises freely and wants to push.
+- Illustrated band rejected (looked AI-generated). Backdrop is now abstract light ribbons + bokeh. UI back to normal sizes.
+- Fingerings are the core. Data now covers the whole horn (B♭3–F♯6) with alternates, from `sheet-music/FingeringChart.pdf`.
+
+## Built
+- **Scales:** circle of fifths, 21 scales with sound / use / songs, one octave + whole-horn notation, fingering card per note.
+- **All notes:** every note with alternates.
+- **Reading:** generator from chosen key + scale, check fingering (logged to DB), mark fumbled.
+- **Progress:** seeded data view.
+- Tests: 46 (transposition, spelling, scales, generator, fingerings, DB).
 
 ## Open questions
 - Naima and In a Sentimental Mood concert keys: not set until we have charts.
-- Does the in-app assessment need to cover Bb3/B3 (outside range today)?
-- Low C# (C#4) fingering: confirm against a reference chart before adding.
+- Scale songs/descriptions: student to flag any that feel wrong or unhelpful.
+- Reading: save fumbles/attempts and weight toward looked-up notes (next).
 - Reading chunk is ~390 KB gzipped (VexFlow with embedded fonts). Fine locally; could trim to Bravura-only later.
 
 ## Next
-1. Student reviews the prototype (`sax`, then the Session / Reading / Progress tabs) and lists changes.
-2. Phase 1a: transposition + reference (scales, chords, circle of fifths, piano view).
+1. Student reviews Scales / All notes / Reading.
+2. Reading: persist attempts, weight toward looked-up notes, silent mode.
+3. Tunes area with Autumn Leaves / Smooth Operator charts and their fingerings.
 
 ## Notes
 - Smooth Operator chart (Online Sax Academy) is written D minor for alto = concert F minor, melody only, no chord symbols.

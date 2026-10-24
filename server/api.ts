@@ -1,5 +1,6 @@
 import { Hono } from 'hono';
 import type { DatabaseSync } from 'node:sqlite';
+import { fromMidi } from '../shared/pitch.ts';
 
 export function api(db: DatabaseSync): Hono {
   const app = new Hono();
@@ -21,6 +22,18 @@ export function api(db: DatabaseSync): Hono {
         .all(),
     }),
   );
+
+  // A "check fingering" tap while sight-reading.
+  app.post('/lookup', async (c) => {
+    const { midi } = await c.req.json<{ midi: number }>();
+    if (!Number.isInteger(midi) || midi < 58 || midi > 90) return c.json({ error: 'midi out of range' }, 400);
+    const now = new Date().toISOString();
+    db.prepare(
+      `INSERT INTO notes_progress (pitch, midi, lookups, first_seen, last_seen) VALUES (?, ?, 1, ?, ?)
+       ON CONFLICT (pitch) DO UPDATE SET lookups = lookups + 1, last_seen = excluded.last_seen`,
+    ).run(fromMidi(midi), midi, now.slice(0, 10), now);
+    return c.json({ ok: true });
+  });
 
   return app;
 }

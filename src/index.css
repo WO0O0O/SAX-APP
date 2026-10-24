@@ -21,10 +21,6 @@
   --font-sans: 'Figtree Variable', system-ui, sans-serif;
 }
 
-html {
-  font-size: 20px;
-}
-
 body {
   background: var(--color-night);
   color: var(--color-smoke);
@@ -33,21 +29,29 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-brass);
-  outline-offset: 3px;
+  outline: 2px solid var(--color-brass);
+  outline-offset: 2px;
 }
 
 @utility caps {
   font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 0.85rem;
-  letter-spacing: 0.18em;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@utility caps-xs {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 @utility panel {
-  background: color-mix(in srgb, var(--color-mahogany) 88%, transparent);
+  background: color-mix(in srgb, var(--color-mahogany) 90%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-walnut) 80%, transparent);
-  border-radius: 16px;
-  box-shadow: 0 20px 50px -20px rgb(0 0 0 / 0.8);
+  border-radius: 14px;
+  box-shadow: 0 20px 50px -24px rgb(0 0 0 / 0.8);
 }

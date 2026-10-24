@@ -2,53 +2,37 @@
 
 Single-user web app, used on a **laptop propped in front of the player**. Optimise for readability at arm's length (large notation, big type, high contrast), keyboard/mouse control with big targets. Phone is secondary, so keep it responsive but don't optimise for it.
 
-## Feature priority
-The student ranked: (a) lesson plan + timers + rest prompts, (b) generated sight-reading, (e) practice log + progress, (f) scale/mode/chord reference with alto transposition. Others are lower priority but wanted later: (c) backing tracks, (d) record and self-listen.
+## Direction (changed 2026-10-24, after the first prototype)
+- **No timed sessions.** No session planner, block timers, forced rests or fatigue button. The app is a set of areas he opens whenever he wants, for as long as he wants.
+- **Fingerings are the core.** Every written note has its fingering on screen, from the reference chart (`sheet-music/FingeringChart.pdf`, TamingTheSaxophone.com).
+- Normal UI sizing (not "arm's length" huge).
 
-| Phase | Feature | Priority |
+| Area | What it does | Status |
 |---|---|---|
-| 1 | Session planner with timers and forced rests | High |
-| 1 | Sight-reading generator (notation) | High |
-| 1 | Practice log + progress tracking | High |
-| 1 | Reference: scales/modes/chords, concert to alto transposition | High |
-| 2 | Backing tracks (chords, bass, drums, any key, any tempo) | Medium |
-| Stretch | Record and self-listen with questions | Low |
-| 3 | Tune library with chord charts and analysis | Medium |
-| 3 | Improvisation drills (chord tones, guide tones, licks) | Medium |
+| **Scales** | Circle of fifths picks the key; 21 scales (major + modes, minors, pentatonics, blues, bebop, symmetric) each with sound / where it's used / songs; one octave and the **whole horn (low B♭ to high F♯)** in notation; a fingering card for every note | Built |
+| **All notes** | Every written note B♭3 to F♯6 with standard and alternate fingerings | Built |
+| **Reading** | Sight-reading exercises generated from the chosen key + scale, within his range; tap to check fingering (logged as a lookup) or mark fumbled | Built (lookups saved; fumbles not yet) |
+| **Progress** | Lookups per note, tune milestones | Basic |
+| Backing tracks | Chords, bass, drums in any key and tempo | Later |
+| Tunes | Charts + analysis for Autumn Leaves, Naima, Smooth Operator | Later |
+| Record / self-listen | | Stretch |
 
-## 1. Session planner (a)
-- Generates today's session from the curriculum stage and the practice log. Standard block order:
-  1. Warm-up and long tones (low-intensity, lip-friendly)
-  2. Reading block (generated exercise)
-  3. Technique/jazz language block (short, swung)
-  4. Tune work
-  5. Cool-down
-- **Lip budget:** each block has a `lip_load` (low/med/high). The planner caps total high-load minutes. Early on: 20-25 min of playing per block, **mandatory rest** between blocks (visible countdown). Total playing time ramps up weekly, only if the log shows no fatigue flags.
-- **Timers:** large per-block countdown, auto-advance, rest timer that cannot be skipped without logging "skipped rest".
-- **Fatigue button:** "lip failing / biting". Ends the playing portion, switches to **off-horn work** (silent fingering of reading exercises, theory, ear training at the piano) and logs the event with time-into-session.
-- **Optional light day:** 10-15 min low-load session for days beyond the 3 main ones. No high register.
-- Structure: Tone -> Technique -> Reading -> Application. The old prompt's "never root-to-root scales" rule stays: scales cover the full known range, but are done **early when fresh**, and the range is cut back when fatigue appears.
+## 1. Scales and fingerings
+- Scale data in `src/music/scales.ts`; spelling rules in `shared/theory.ts` (one letter per degree; `b5|#4` style alternates avoid F♭/C♭ where players would not write them).
+- Full range = every note of the scale between written B♭3 and F♯6. Notes outside his comfortable range (C4–D♯6) are shown grey and tagged "stretch", never hidden.
+- Each fingering card shows the written note, the concert note it sounds, the key diagram and alternates.
 
-## 2. Sight-reading generator (b)
-The core feature. Goal: train **staff-to-fingering recall**. He can name the notes; the exercise trains knowing the keys for each one without a chart.
-
-- Renders notation in the browser (VexFlow or OpenSheetMusicDisplay) in **written alto pitch**.
-- **Constrained generation:**
-  - Note pool: only notes unlocked so far, plus 1-2 "new notes" being introduced.
-  - Key signature, rhythm vocabulary (quarter/eighth/triplet/rest), length (4-8 bars), range, max interval leap.
-  - Seeded random so a bar can be replayed.
-  - Jazz-flavoured option: swung eighths indication, simple chord symbols above the staff.
-- **Finger chart is hidden by default.** Flow: read, attempt, then tap "Check fingering" on any note. Tapping logs a **lookup** against that note.
-- **Per-note tracking:** every note gets `lookups`, `attempts`, `confidence`. The generator weights toward notes with high lookups (spaced repetition for pitches).
-- **Tap-to-mark-wrong:** after playing, the student taps notes he fumbled. This is the data source, since the app can't hear.
-- **Silent mode:** exercises can be done fingering without blowing, for lip rest.
-- **Ladders:** unlock new note groups once lookup rate falls below a threshold (see `curriculum.md`).
-- Export or print as PDF (nice-to-have).
+## 2. Sight-reading (Reading area)
+Goal: staff-to-fingers recall. He can name the notes; the exercise trains knowing the keys without a chart.
+- Seeded random walk through the chosen scale, 4/4, 4/8/12 bars, within his range, ending on the tonic. "New exercise" (or N) re-rolls.
+- Notation in written pitch (VexFlow); accidentals follow the bar rule.
+- Fingering hidden by default. "Check fingering" on a note shows it and logs a lookup (`POST /api/lookup`). "Mark fumbled" colours notes he fumbled.
+- Later: weight generation toward high-lookup notes, save fumbles and attempts, silent-fingering mode.
 
 ## 3. Practice log + progress (e)
 - Auto-created from each session: date, blocks done, minutes playing vs resting, fatigue events, notes looked up, tempo reached, self-rating per checklist item.
 - Manual notes field: "what felt wrong".
-- **End-of-session checklist** (required to close a session): Tone quality, Note transitions, Articulation (tongue/slur), Dynamics. Rated 1-5 with one free-text line each. Vibrato and embellishments are out of scope until tone is solid.
+- Optional end-of-practice notes (tone, transitions, articulation, dynamics) for the tutor export. Never required.
 - **Progress views:** unlocked notes over time, lookup rate trend, tempo per exercise, total playing minutes per week, fatigue onset time (the lip endurance chart), streak per week (target: 3/week).
 - **Weekly summary** (rule-based, no AI required): what moved, what stalled, and the one priority for next week.
 - **Export** the log as JSON/markdown so it can be pasted into the Claude tutor project.

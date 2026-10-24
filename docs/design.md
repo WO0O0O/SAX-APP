@@ -1,14 +1,14 @@
 # Design System: "The Late Set"
 
-The app is a small jazz club after dark. A band plays under one warm spotlight; tables of people with drinks and cigars lean in to listen; smoke hangs in the light. Illustration is **stylised, flat and fluid** (elongated mid-century figures, curved shapes, no realism). Colours are the room's: black, brown, oxblood red, lamp amber, brass, and smoke white.
+A jazz club after dark, suggested rather than drawn: warm lamp light out of focus, ribbons of red and amber light drifting like smoke, a little grain. **No figures or instruments**: hand-coded figurative SVG looked cheap ("AI-generated") and was rejected on 2026-10-24. If figurative art comes back, it should be a real illustration asset, not hand-written paths.
 
-The room is the frame; the work happens on paper. **Notation always sits on a cream "chart" card** that reads like sheet music on a music stand, with nothing decorative on or over it.
+Notation always sits on a cream "paper" card.
 
 ## Principles
-1. **Readable at arm's length.** Laptop on a stand ~70-80 cm away. Body text ≥ 20px, staff spaces ≥ 18px, timer ≥ 160px, buttons ≥ 56px tall.
-2. **The scene breathes with the session.** Rest and idle screens: scene full. Work screens: scene dimmed and slowed behind the content.
-3. **One accent per job.** Oxblood = stop / fatigue / fumbled. Amber = light, attention, "pressed key". Brass = interactive focus and primary actions.
-4. **Motion is ambient, never busy.** Slow loops (6-30s), `transform` and `opacity` only. Off for `prefers-reduced-motion`, paused when the tab is hidden.
+1. **Normal sizes.** Body 16px, compact controls. (The first pass used arm's-length sizing and was rejected as oversized.)
+2. **Content first.** The backdrop is dimmed (~50%) behind every screen; panels are near-opaque.
+3. **One accent per job.** Oxblood/wine = fumbled or destructive. Amber = pressed keys, selection, light. Brass = links and focus.
+4. **Motion is ambient.** Slow drifts (25-45s), `transform`/`opacity` only, off for reduced motion, paused when the tab is hidden.
 
 ## Colour tokens
 Defined in `src/index.css` (`@theme`), used as Tailwind colours (`bg-night`, `text-smoke`, ...).
@@ -32,33 +32,18 @@ Defined in `src/index.css` (`@theme`), used as Tailwind colours (`bg-night`, `te
 
 ## Type
 Self-hosted via `@fontsource` (no network at runtime).
-- **Display:** DM Serif Display. Headings, timer numerals, block names. Club-sign elegance.
-- **UI:** Figtree (variable). Body, labels, buttons.
-- Scale: 20 / 24 / 32 / 44 / 64 / 180 (timer). Caps labels: Figtree 600, tracking 0.18em, 16-18px.
-- Timer digits sit in fixed-width cells so they don't jitter.
+- **Display:** DM Serif Display for headings and note names. It has no ♯/♭ glyphs, so `NoteText` sets accidentals in Figtree.
+- **UI:** Figtree (variable).
+- Caps labels: `caps` (0.75rem) and `caps-xs` (0.68rem) utilities.
 
-## The scene (`src/scene/BarScene.tsx`)
-One inline SVG, `viewBox 0 0 1600 900`, `xMidYMax slice` so it fills any window. Layers back to front:
-
-1. **Wall:** near-black brown radial gradient, two wall sconces with amber glow.
-2. **Stage:** oxblood curtain with fluid folds, a low riser.
-3. **Spotlight:** cream cone at very low opacity, slow flicker.
-4. **Band** (rim-lit silhouettes): pianist at a grand, upright bassist, drummer with cymbals, saxophonist front and centre. Each sways on its own slow loop.
-5. **Tables:** two or three tables, each with a red-shaded lamp, glasses and seated figures seen from behind, facing the stage. One figure with a cigar (pulsing ember, rising smoke); one pair leaning in to laugh.
-6. **Smoke:** soft cream ellipses drifting upward through the light.
-7. **Foreground:** dark chair backs and a shoulder along the bottom edge, plus a vignette.
-
-Modes: `full` (rest / idle) and `dim` (work screens: dark overlay ~70%, ambient loops slowed). Animations pause via `html[data-hidden]` when the tab is hidden; reduced motion disables them.
-
-Budget: scene SVG under ~25 KB source, no filters on animated elements, no raster images.
+## The backdrop (`src/scene/BarScene.tsx`)
+One inline SVG, `xMidYMid slice`: room gradient, out-of-focus lamp lights (some pulse), four flowing ribbons (wide soft stroke + narrow core + thin brass highlight) drifting slowly, rising smoke puffs, a static grain filter, a vignette. A `dim` overlay sits on top.
 
 ## Components
-- **Chart card:** `paper` background, soft drop shadow, 12px radius, generous padding. Title in DM Serif, stage label in caps. VexFlow renders in `paper-ink`, scaled so staff spaces are ~20px. Two bars per line.
-- **Notes on the card** are tap targets. Tap = "check fingering" (logs a lookup, note turns `lookup` amber). In "mark fumbled" mode, tap turns the note `wine`.
-- **Fingering diagram:** dark mahogany panel, schematic alto key layout with every key labelled. Pressed keys fill `ember` with a faint glow; open keys are thin smoke outlines.
-- **Timer:** huge DM Serif numerals, block name above, lip-load chip (low / med / high), block rail below showing done / current / upcoming.
-- **Buttons:** pill shape, ≥ 56px tall. Primary = brass fill + ink text. Secondary = smoke outline. **Fatigue** = oxblood fill, always visible during playing blocks.
-- **Focus:** 3px brass ring, offset 3px. Every action has a keyboard shortcut shown as a small keycap.
+- **Paper card:** `paper` class. VexFlow notation in ink; tappable notes highlight amber; note names under scale notes; grey = outside his range.
+- **Fingering card:** note name (written), concert note it sounds, compact key diagram (pressed keys amber), alternates as small pills, plain-language summary.
+- **Fingering diagram:** schematic layout modelled on the reference chart: pearls centre, palm + octave keys top left, left-pinky table right of the left hand, side keys right of the right hand, right-pinky keys bottom left.
+- **Circle of fifths dial:** selected key amber; centre shows the key and its major key signature; enharmonic spelling toggle for black-key positions.
 
 ## Copy voice
 Short, direct, a little dry. No motivational filler (see `overview.md` principles). The club flavour lives in the illustration, not in jokes.

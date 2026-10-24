@@ -1,0 +1,29 @@
+.score .note-hit {
+  fill: transparent;
+  stroke: none;
+  cursor: pointer;
+  transition: fill 0.15s;
+}
+.score .note-hit:hover {
+  fill: rgb(154 84 16 / 0.08);
+}
+.score .note-hit.is-selected {
+  fill: rgb(154 84 16 / 0.16);
+}
+.score .note-label {
+  font: 600 13px var(--font-sans);
+  fill: #5a4a3e;
+  text-anchor: middle;
+}
+.score .note-label.is-selected {
+  fill: var(--color-lookup);
+}
+
+/* Paper card for notation. */
+.paper {
+  background-color: var(--color-paper);
+  color: var(--color-paper-ink);
+  border-radius: 12px;
+  background-image: radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.35), transparent 60%);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.35) inset, 0 24px 60px -30px rgb(0 0 0 / 0.9);
+}

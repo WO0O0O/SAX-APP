@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { chromaticRange } from '../../shared/pitch.ts';
 import { FINGERINGS } from './fingerings.ts';
 
 describe('fingerings', () => {
-  it('covers the student range except low C# (pending reference check)', () => {
-    const missing = chromaticRange('C4', 'D#6').filter((p) => !FINGERINGS[p]);
-    expect(missing).toEqual(['C#4']);
+  it('covers every written note from low Bb (58) to high F# (90)', () => {
+    for (let m = 58; m <= 90; m++) expect(FINGERINGS[m]?.length, `midi ${m}`).toBeGreaterThan(0);
   });
 
-  it('R1 notes are left hand only', () => {
-    expect(FINGERINGS.G4).toEqual(['L1', 'L2', 'L3']);
-    expect(FINGERINGS.A4).toEqual(['L1', 'L2']);
-    expect(FINGERINGS.B4).toEqual(['L1']);
+  it('matches the reference chart for key notes', () => {
+    expect(FINGERINGS[67][0].keys).toEqual(['L1', 'L2', 'L3']); // G4
+    expect(FINGERINGS[61][0].keys).toEqual(['L1', 'L2', 'L3', 'lowCs', 'R1', 'R2', 'R3', 'lowC']); // C#4
+    expect(FINGERINGS[73][0].keys).toEqual([]); // C#5 open
+    expect(FINGERINGS[85][0].keys).toEqual(['oct']); // C#6
+    expect(FINGERINGS[87][0].keys).toEqual(['oct', 'palmD', 'palmEb']); // Eb6
   });
 
-  it('second octave adds the octave key', () => {
-    expect(FINGERINGS.D5).toEqual(['oct', ...FINGERINGS.D4]);
-    expect(FINGERINGS['C#6']).toEqual(['oct']);
+  it('second octave adds the octave key and keeps alternates', () => {
+    expect(FINGERINGS[74][0].keys).toEqual(['oct', ...FINGERINGS[62][0].keys]);
+    expect(FINGERINGS[82].map((f) => f.name)).toEqual(['Bis', '1 + 1', 'Side B♭']);
   });
 });

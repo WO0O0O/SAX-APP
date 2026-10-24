@@ -19,37 +19,18 @@ For the coding agent. Build in phases; each phase is usable on its own. Read `ov
 - Repo README with run instructions.
 - **Acceptance:** `npm start` runs; migration applies; seed loads.
 
-## Phase 0.5: Design system (Opus)
-- Produces `docs/design.md`: palette tokens, type scale, SVG scene layers, animation inventory, component rules. Then a static prototype of two screens (session/rest timer and sight-reading card) for the student to approve before the app is themed.
+## Phase 0.5: Design system (done, revised)
+- `docs/design.md`. First pass used an illustrated band; the student rejected the figures and oversized UI, so the scene is now abstract (ribbons of light, bokeh, smoke) and the UI uses normal sizes.
 - Notation always sits on a high-contrast cream card; no decoration over staves.
 - **Acceptance:** student signs off the prototype; animations use only transform/opacity and honour reduced-motion.
 
-## Phase 1a: Reference + transposition
-- Concert <-> alto converter for notes, keys, and chord symbols.
-- Scales/modes/chords in written alto notation with fingering shown on demand.
-- Circle of fifths view with unlocked keys highlighted.
-- **Acceptance:** unit tests for the three transposition checks in `app-spec.md` plus a table test over all 12 keys; fingering lookup covers the entire alto written range.
+## Phase 1 (re-planned 2026-10-24): free practice areas
+Timed sessions were dropped at the student's request. Areas are used freely, no timers.
+- **1a Scales + fingerings: built.** Circle of fifths, 21 scales with descriptions, one octave + whole-horn notation, fingering cards; All notes screen. Unit tests: transposition, spelling, scale building, fingering coverage B♭3–F♯6.
+- **1b Reading: built (first version).** Scale-based generator, check fingering (logged), mark fumbled. Next: save attempts and fumbles, weight toward looked-up notes.
+- **1c Progress + export:** lookups per note over time, tune milestones, export for the Claude tutor project.
 
-## Phase 1b: Sight-reading generator
-- Note-pool constrained generator with seed, key, rhythm, length, max leap.
-- VexFlow rendering at large size, with chord symbols optional.
-- Finger chart hidden; "Check fingering" per note logs a lookup. Tap-to-mark-fumbled after the take.
-- Weighted selection toward high-lookup notes; ladder unlock logic from `curriculum.md` Track A.
-- Silent-fingering mode.
-- **Acceptance:** generator never produces a note outside the pool or the student's written range (property test). Lookup counts persist. Next exercise measurably favours looked-up notes.
-
-## Phase 1c: Session planner + timers
-- Builds a session from stage, log, and lip budget. Block timers, forced rest countdown, fatigue button -> off-horn switch.
-- Weekly ramp rules from `curriculum.md`.
-- **Acceptance:** planner never exceeds the block/rest limits; fatigue event ends the playing portion and logs time-into-session.
-
-## Phase 1d: Log + progress + checklist
-- End-of-session checklist (tone, transitions, articulation, dynamics) required to close.
-- Progress charts: unlocked notes, lookup rate trend, playing minutes/week, fatigue onset time.
-- Weekly summary (rule-based), export log to markdown/JSON for pasting into the Claude tutor project.
-- **Acceptance:** a full simulated week renders correct charts; export output matches the template in `tutor-instructions.md`.
-
-**Checkpoint:** student uses Phase 1 for two weeks before Phase 2 begins. Fix friction first.
+**Checkpoint:** student uses the app for a couple of weeks; fix friction first.
 
 ## Phase 2a: Backing tracks
 - Tone.js engine: comping, walking bass, swing drums, count-in, tempo, loop, speed trainer.
@@ -69,7 +50,7 @@ For the coding agent. Build in phases; each phase is usable on its own. Read `ov
 ---
 
 ## Definition of done (whole project)
-The student can open the app on a laptop, get a lip-safe session with timers, read a fresh exercise in notation, log the session, and see progress, without needing to ask the tutor to design the lesson.
+The student can open the app on a laptop, look up any scale in any key with every fingering across the whole horn, read fresh exercises in notation, and see progress, without needing to ask the tutor to design the lesson.
 
 ## Handoff to the Claude tutor
 The app generates the plan. The Claude project (`tutor-instructions.md`) does diagnosis, explanation, theory teaching, and planning across weeks, reading the exported log. They share the same curriculum file as the source of truth.
