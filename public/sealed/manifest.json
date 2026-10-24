@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "salt": "UD7RdJj4gM0RTVYve6/DQw==",
+  "iterations": 250000,
+  "check": "DMEql7C7MPqjxuTtXHa5hdO5gYMDaht6jZ0zPaNn/gGxh5yuOA==",
+  "files": {
+    "FingeringChart.pdf": {
+      "sha256": "fbe7945024ef1c54141d79d33636c18a9e832d4934a3c4eab1d978bc04d3ed80",
+      "bytes": 677837
+    },
+    "autumn-leaves-easy.pdf": {
+      "sha256": "2d38b1a0a665ab3097fdb88cebce09ec6afb53ea793d0a3bbef25f4efc6bdf15",
+      "bytes": 62502
+    },
+    "autumn-leaves.tune.json": {
+      "sha256": "a80a06009d8d69716675983c97f85180d69323789f2f5ff11938d3750892196a",
+      "bytes": 1986
+    },
+    "smooth-operator-sade.pdf": {
+      "sha256": "1d15c07139ca67932ffce28dee69a779d7593cd29d497acdad3a28cf3aa96a87",
+      "bytes": 22595
+    },
+    "smooth-operator.tune.json": {
+      "sha256": "102af44ac17bc9f3dc6136c9248b5fa4b34c9dbf2609223f0b435dd2010c183a",
+      "bytes": 666
+    }
+  }
+}
