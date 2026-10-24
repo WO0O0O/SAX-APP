@@ -1,13 +1,13 @@
 # Status (living file: update every session)
 
 **Last updated:** 2026-10-24
-**State:** in daily use. Five areas built: Scales, All notes, Tunes, Reading, Progress. How it's built: [architecture.md](architecture.md).
+**State:** in daily use. Online at https://wo0o0o.github.io/SAX-APP/ (any device, nothing saved) and on the Mac via `sax` (saves progress). How it's built: [architecture.md](architecture.md).
 
 ## What the app is
-Free practice areas, no timers. Fingerings for every written note are the core, plus scales from the circle of fifths across the whole horn, his tune charts, and generated sight-reading. Local only: `sax` starts a server on 127.0.0.1 with a SQLite file.
+Free practice areas, no timers. Fingerings for every written note are the core, plus scales from the circle of fifths across the whole horn, his tune charts, and generated sight-reading. Two ways to run it: the online copy on GitHub Pages (static, sheet music encrypted, nothing saved) and `sax` on the Mac (local server + SQLite, the only place progress is saved).
 
 ## Decisions
-- Local-only: 127.0.0.1 + SQLite file, no auth, no cloud. (2026-10-24)
+- Progress data stays on the Mac only: 127.0.0.1 + SQLite file, no auth, no cloud database. Other devices use the online copy without saving. (2026-10-24)
 - Node's built-in `node:sqlite`; server TypeScript runs directly on Node; Hono for the API. (2026-10-24)
 - Launch with the `sax` alias in `~/.zshrc` → `bin/sax`. (2026-10-24)
 - Written range C4–D♯6 (`shared/student.ts`). The full horn (B♭3–F♯6) is still shown, greyed as "stretch". (2026-10-24)

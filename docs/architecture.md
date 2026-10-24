@@ -6,44 +6,43 @@ A guide to the code: what each part does, how data is saved, and the parts that 
 
 ## 1. The big picture
 
+The same React app runs in two places. **Almost everything happens in the browser**: scales, spelling, transposition, fingerings, sight-reading and drawing the notation are all code in `src/` and `shared/`. The only differences are where the files come from and whether there's a database behind them.
+
 ```
- Terminal: `sax`                       Your browser (http://127.0.0.1:5757)
-      │                                 ┌──────────────────────────────────────┐
-      ▼                                 │ React app (src/)                     │
- bin/sax ── builds if needed ──▶ dist/  │  Scales · All notes · Tunes ·        │
-      │                          (HTML, │  Reading · Progress                  │
-      ▼                           JS,   │                                      │
- node server/index.ts ◀─ serves ─ CSS)  │  music theory, fingerings, notation  │
- ┌───────────────────────────┐          │  all run here, in the browser        │
- │ Hono web server           │◀── /api ─┤                                      │
- │  • static files (dist/)   │   JSON   │  localStorage: last key/scale/tune   │
- │  • /api/* endpoints       │          └──────────────────────────────────────┘
- └──────┬──────────────┬─────┘
-        │              │ reads
-        ▼              ▼
-  data/sax.db     sheet-music/*.tune.json
-  (SQLite file)   (your transcribed charts)
+ ONLINE COPY (any device)                      ON THE MAC (`sax`)
+ https://wo0o0o.github.io/SAX-APP/             http://127.0.0.1:5757
+
+ git push ─▶ GitHub Actions                    bin/sax ─▶ builds dist/ if needed
+            (test + build, VITE_HOSTED=true)              │
+                 │                                        ▼
+                 ▼                             node server/index.ts (Hono)
+          GitHub Pages: static files            ├─ serves dist/
+          (dist/ + public/sealed/*.bin)         ├─ /api/* ─▶ data/sax.db (SQLite)
+                 │                              └─ /api/charts, /api/files ─▶ sheet-music/
+                 ▼                                        │
+ ┌──────────────────────────────────┐          ┌──────────────────────────────────┐
+ │ Browser: the React app           │          │ Browser: the same React app      │
+ │ • no server: nothing is saved    │          │ • progress + lookups saved via   │
+ │ • charts/PDFs decrypted here     │          │   /api to the SQLite file        │
+ │   with your passphrase           │          │ • charts/PDFs read from disk     │
+ └──────────────────────────────────┘          └──────────────────────────────────┘
 ```
 
-The work splits like this:
-
-- **The browser does almost everything.** Scales, spelling, transposition, fingerings, sight-reading generation and drawing the notation are all code in `src/` and `shared/`, running in the page. None of it needs the server.
-- **The server is small.** It hands the browser the built app, saves your progress and lookups to a SQLite file, and serves your tune charts. That's about 180 lines of code in total.
-- **Nothing leaves the laptop.** The server only listens on `127.0.0.1` (loopback), so other devices on your wifi can't reach it. There's no login because there's nothing to log in to.
-
-## 1b. Two ways it runs
-
-| | On this Mac (`sax`) | Online copy (GitHub Pages) |
+| | Online copy | On the Mac (`sax`) |
 |---|---|---|
-| URL | http://127.0.0.1:5757 | https://wo0o0o.github.io/SAX-APP/ |
-| Server | Node + SQLite | None: just static files |
+| Who can open it | Anyone with the link (the sheet music needs the passphrase) | Only this Mac (the server listens on `127.0.0.1`) |
 | Scales, All notes, Reading | ✓ | ✓ |
-| Tunes | ✓ charts from `sheet-music/` | ✓ after unlocking with your passphrase |
-| Saves progress and lookups | ✓ | ✗ (Progress tab hidden) |
+| Tunes | ✓ after entering the passphrase once per device | ✓ |
+| Progress tab, saved milestones, lookup counts | ✗ hidden; nothing is saved | ✓ in `data/sax.db` |
+| Updates | Automatically, about a minute after each push to `main` | Next time you run `sax` (it rebuilds if the code changed) |
 
-The online copy is the same code built with `VITE_HOSTED=true` ([src/mode.ts](../src/mode.ts)). In that mode [src/api.ts](../src/api.ts) never calls the server: the tune list comes from [shared/tunes.ts](../shared/tunes.ts), lookups aren't sent, and charts and PDFs are decrypted in the browser (§7.6).
+**How one codebase does both.** The online copy is built with `VITE_HOSTED=true`, which sets `HOSTED` in [src/mode.ts](../src/mode.ts). [src/api.ts](../src/api.ts) checks it in each function:
+- the tune list comes from [shared/tunes.ts](../shared/tunes.ts) instead of the database;
+- lookups aren't sent;
+- charts and PDFs are fetched encrypted and decrypted in the browser (§7.6);
+- the Progress tab and milestone editor are hidden.
 
-**Deploying:** every push to `main` runs [.github/workflows/pages.yml](../.github/workflows/pages.yml). It installs, runs the tests, builds with the `/SAX-APP/` base path and publishes `dist/` to Pages. Nothing to do by hand.
+**Deploying** is automatic. Every push to `main` runs [.github/workflows/pages.yml](../.github/workflows/pages.yml): install, run the tests, build with the `/SAX-APP/` base path, publish to Pages. If a test fails, nothing is published and the previous version stays live.
 
 ## 2. What happens when you type `sax`
 
@@ -78,7 +77,7 @@ All files in git are needed. Here's what each is for.
 | `.github/workflows/pages.yml` | Builds and publishes the online copy on every push. |
 | `.gitignore` | Keeps `node_modules/`, `dist/`, `data/` and `sheet-music/` out of git. |
 | `README.md` | How to run it. |
-| `CLAUDE.md` | Rules for Claude when working in this repo (written pitch, your range, local-only). |
+| `CLAUDE.md` | Rules for Claude when working in this repo (written pitch, your range, the two run modes). |
 
 ### Folders that aren't in git (generated or personal)
 | Folder | What it is | Safe to delete? |
@@ -194,7 +193,7 @@ Two details worth noticing:
 
 ## 5. How your data is saved
 
-There are three places, each for a different kind of thing.
+**Only the Mac version saves anything.** The online copy has no server or database: you can use everything there, but milestones and lookups aren't recorded, and the Progress tab is hidden. On the Mac there are three places, each for a different kind of thing.
 
 | What | Where | Lifetime |
 |---|---|---|
