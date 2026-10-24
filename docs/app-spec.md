@@ -30,7 +30,7 @@ The student ranked: (a) lesson plan + timers + rest prompts, (b) generated sight
 - Structure: Tone -> Technique -> Reading -> Application. The old prompt's "never root-to-root scales" rule stays: scales cover the full known range, but are done **early when fresh**, and the range is cut back when fatigue appears.
 
 ## 2. Sight-reading generator (b)
-The core feature. Goal: train note recognition from the staff, not fingering recall.
+The core feature. Goal: train **staff-to-fingering recall**. He can name the notes; the exercise trains knowing the keys for each one without a chart.
 
 - Renders notation in the browser (VexFlow or OpenSheetMusicDisplay) in **written alto pitch**.
 - **Constrained generation:**

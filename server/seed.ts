@@ -5,8 +5,8 @@ import { chromaticRange, toMidi } from '../shared/pitch.ts';
 // Student's written range, stated 2026-10-24 (docs/overview.md).
 export const STUDENT_RANGE = { low: 'C4', high: 'D#6' };
 
-// R1: C major, middle octave. He reads these from the staff already.
-const START_UNLOCKED = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
+// R1 of the fingering ladder (docs/curriculum.md Track A): left hand only.
+const START_UNLOCKED = ['G4', 'A4', 'B4'];
 
 // [title, concert key, status]. Concert keys from the charts in docs/; null = not confirmed yet.
 const TUNES: [string, string | null, 'active' | 'queued'][] = [

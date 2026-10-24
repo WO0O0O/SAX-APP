@@ -8,22 +8,26 @@ All pitches are **written alto** unless marked "concert".
 
 ## Track A: Reading (staff to fingers, no finger charts)
 
-**Starting point:** reads C major scale from staff. Everything else is looked up.
+**Starting point (2026-10-24):** reads standard notation fine (note names and rhythm). The gap is knowing which **keys** produce each written note. Treat every fingering as unknown and build it up in small groups that share a fingering idea.
 
-**Mechanism:** note-group ladder. Introduce 2-3 new notes per stage. The generator mixes the new notes with all unlocked notes. Advance when **lookup rate < 10%** over the last 3 exercises with those notes **and** the student plays at the stage tempo.
+**Mechanism:** fingering ladder. Each stage adds 2-3 fingerings, or one rule (like the octave key). The generator mixes the new notes with all unlocked notes. Advance when **lookup rate < 10%** over the last 3 exercises with those notes **and** the student plays at the stage tempo. All 28 notes of his range (C4 to D#6) are covered by R1-R8.
 
-| Stage | Adds | Notes |
+| Stage | Adds (written) | Fingering idea |
 |---|---|---|
-| R1 | C major, middle octave | consolidate, increase tempo |
-| R2 | F#, Bb, Eb | accidentals he already plays, now from the staff. Keys: G, F |
-| R3 | Low register stragglers: C#4, D#4/Eb4, and the low C4 | right-pinky table keys and C#. Low Bb3 and B3 are outside his current range |
-| R4 | Upper register: C#6, D6, then palm keys D6, Eb6 (D#6 is the current ceiling) | palm keys used in Autumn Leaves; teach palm-key hand shape. E6 and F6 only if the range is later extended |
-| R5 | Side Bb, side C, alternate F# | alternate fingerings on purpose, incl. when they help in tunes |
-| R6 | Full range with key signatures: all keys in the circle of fifths | the "no chart" circle-of-fifths target |
-| R7 | Rhythm reading: eighths, triplets, syncopation, rests, ties, swing notation | separate rhythm-only drills (clap or tap) |
-| R8 | Chord-symbol reading and lead sheets | links to the tune library |
+| R1 | B4, A4, G4 | Left hand only: 1, 1-2, 1-2-3 |
+| R2 | F4, E4, D4 | Add right hand: 1, 1-2, 1-2-3 |
+| R3 | C5, C#5 | C = left middle finger only; C# = no keys |
+| R4 | D5, E5, F5, G5, A5, B5, C6 | One rule: same fingerings + left-thumb octave key |
+| R5 | F#4/5, Bb4/5, Eb4/5 | First accidentals: F# (right 2), Bb (bis or 1+1), Eb (right pinky). Keys of G and F |
+| R6 | G#4/5, C#6 | G# (left pinky key); C#6 = open + octave key |
+| R7 | C4, C#4 | Low register: right pinky C, left pinky C# |
+| R8 | D6, Eb6 | Palm keys and palm-key hand shape. Early in the session only |
+| R9 | Side Bb, side C, side F#, bis vs 1+1 | Alternate fingerings chosen on purpose, incl. where they help in tunes |
+| R10 | All keys in the circle of fifths, full range | The "no chart" circle-of-fifths target |
+| R11 | Rhythm and swing notation at tempo | He reads rhythm already; this is executing it at tempo, swung |
+| R12 | Chord symbols and lead sheets | Links to the tune library |
 
-Off-horn variants: silent fingering and naming notes, flash-card style, for lip rest days.
+Off-horn variants for lip rest days: silent fingering of exercises, and flash cards (see a note, press the keys, then check).
 
 ---
 
@@ -75,9 +79,9 @@ Tune work always includes: head from sheet music, then from memory, then the **a
 
 | Order | Tune | Focus |
 |---|---|---|
-| 1 | **Autumn Leaves** (easy -> full head) | ii-V-I in major and relative minor, chord tones, 12-bar-style loop. Alto key: E minor / G major written. Move off the YouTube finger-chart video; read the chart (`docs/autumn-leaves-easy.pdf`) |
+| 1 | **Autumn Leaves** (easy -> full head) | ii-V-I in major and relative minor, chord tones, 12-bar-style loop. Alto key: E minor / G major written. Move off the YouTube finger-chart video; read the chart (`sheet-music/autumn-leaves-easy.pdf`) |
 | 2 | **Naima** | Slow ballad, sustained tones, tone and dynamics. Pedal-point harmony. Great for long-tone control and breath |
-| 3 | **Smooth Operator** (Sade) | Groove tune in minor, written D minor (concert F minor) in the Online Sax Academy chart, `docs/smooth-operator-sade.pdf`. Syncopation, tied notes, minor pentatonic/blues colour. The chart has no chord symbols, so chords get added in the tune library |
+| 3 | **Smooth Operator** (Sade) | Groove tune in minor, written D minor (concert F minor) in the Online Sax Academy chart, `sheet-music/smooth-operator-sade.pdf`. Syncopation, tied notes, minor pentatonic/blues colour. The chart has no chord symbols, so chords get added in the tune library |
 | 4 | **So What** | D Dorian/Eb Dorian, two modes a half-step apart, simplest route to improvising |
 | 5 | **In a Sentimental Mood** | Slow ballad, chord colours, minor to major shift |
 | 6 | A basic 12-bar blues (F or Bb concert) | Blues scale, call and response |

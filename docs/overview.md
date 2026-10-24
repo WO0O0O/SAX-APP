@@ -7,17 +7,17 @@ A personal practice system for one student: a laptop web app (plus a Claude proj
 - **Instrument:** Jupiter 767 alto sax (Eb), stock mouthpiece, size 2 reed. No gear changes planned yet.
 - **Started:** March 2026. Played ~1 month straight, then **stopped 4+ months**, returned **~5 days ago**. Embouchure (bottom lip, orbicularis oris) is weak again; high notes late in a session are hard.
 - **Known physical limiter:** lip fatigue leads to jaw biting, thin tone, squeaks. Historically failed around 45-60 min.
-- **Range (stated 2026-10-24):** written **C4 (low C, right pinky) to D#6/Eb6 (palm keys)**. Low Bb, B and C# (left-pinky bell keys) are outside the current range. The app's first assessment can verify or extend it.
-- **Reading:** can read the C major scale from the staff. For every other note, looks up a finger chart. Fast on notes already learned, slow on new ones, especially notes using side/palm keys. Sight-reading is the main gap.
+- **Range (stated 2026-10-24):** written **C4 (low C, right pinky) to D#6/Eb6 (palm keys)**. Low Bb3 and B3 (left-pinky bell keys) are outside the current range. The app's first assessment can verify or extend it.
+- **Reading (corrected 2026-10-24):** reads standard notation fine (note names and rhythm). The gap is **staff to fingers**: knowing which keys produce a written note. Treat every fingering as unknown and build it up from scratch. Currently relies on finger charts and YouTube finger-chart videos.
 - **Theory:** essentially **zero formal theory** (the old Gemini prompt wrongly said "intermediate"). Plays piano by ear/memory (e.g. Clair de Lune). Ear is a major asset. Start theory from scratch, bridged through piano.
-- **Repertoire now:** easy Autumn Leaves (plays it, but from YouTube finger-chart videos), and Naima. Charts by Online Sax Academy: `docs/autumn-leaves-easy.pdf` (alto part is E minor / G major written) and `docs/smooth-operator-sade.pdf` (alto part is D minor written, concert F minor; melody only, no chord symbols).
+- **Repertoire now:** easy Autumn Leaves (plays it, but from YouTube finger-chart videos), and Naima. Charts by Online Sax Academy: `sheet-music/autumn-leaves-easy.pdf` (alto part is E minor / G major written) and `sheet-music/smooth-operator-sade.pdf` (alto part is D minor written, concert F minor; melody only, no chord symbols).
 - **Practice time:** aims for 3 days/week, wants to push higher.
 - **Learning source today:** YouTube only (BetterSax etc.). No teacher.
 - **Influences:** Coltrane, Rollins, Getz. Wants to play jazz, then blues. Dislikes sounding "classical" and dislikes classical-style scale practice. Wants to find his own sound while being able to emulate the greats.
 - **Recording:** happy to record himself and listen back. Wants generated sheet music and exercises.
 
 ## Goals
-1. **Read standard notation without finger charts** (the biggest change).
+1. **Know the fingering for any written note without finger charts** (the biggest change).
 2. **Understand the theory behind the tunes**, not just play them.
 3. **Improvise** over backing tracks at home.
 4. **Play ideas from his head** (melodies he hears, tunes he wants to play).
@@ -33,7 +33,7 @@ A personal practice system for one student: a laptop web app (plus a Claude proj
 
 ## Principles
 1. **Lip health first.** Rest is part of the program. Embouchure rebuild is gradual.
-2. **Reading is trained as a skill.** Finger charts are a reference to check after an attempt, never the first move.
+2. **Staff-to-fingers is trained as a skill.** Finger charts are a reference to check after an attempt, never the first move.
 3. **Theory is earned through tunes he cares about**, explained via piano.
 4. **Jazz and blues from week one.** Keep scale work short and swung, not classical drill.
 5. **One priority fix per session.** Direct feedback, no motivational filler.

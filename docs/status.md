@@ -10,16 +10,17 @@
 - Student range: written C4 to D#6. (2026-10-24)
 - Third tune: Smooth Operator. (2026-10-24)
 - Recording/self-listen is a stretch goal, local disk only. (2026-10-24)
+- Reading track reframed as a staff-to-fingers ladder: he reads notation fine, fingerings are treated as unknown. Starts at R1 = G4, A4, B4. (2026-10-24)
+- Sheet music PDFs live in `sheet-music/` (git-ignored, not ours to publish). (2026-10-24)
 - Design: jazz-bar illustrated theme, notation on a cream card. Designed by Opus in Phase 0.5.
 
 ## Phase 0 delivered
 - Scaffold: Vite + React 19 + TS + Tailwind 4; server in `server/`, shared pitch maths in `shared/`.
 - Migration `001_init.sql` (schema in `app-spec.md`, plus `track_progress`; `recordings` deferred).
-- Seed: profile (range C4-D#6), 28 notes with C4-C5 naturals unlocked, tracks at R1/T1/J1, 6 tunes (3 active).
+- Seed: profile (range C4-D#6), 28 notes with R1 (G4, A4, B4) unlocked, tracks at R1/T1/J1, 6 tunes (3 active).
 - `npm run backup`, README, tests for pitch maths and migrate/seed.
 
 ## Open questions
-- Starting unlocked notes: seeded as C major C4-C5 only. Add any he already reads confidently (e.g. F#, Bb)?
 - Naima and In a Sentimental Mood concert keys: not set until we have charts.
 - Does the in-app assessment need to cover Bb3/B3/C#4 (outside range today)?
 

@@ -12,9 +12,7 @@ describe('database', () => {
 
     const notes = db.prepare('SELECT pitch, unlocked FROM notes_progress ORDER BY midi').all();
     expect(notes).toHaveLength(28);
-    expect(notes.filter((n) => n.unlocked).map((n) => n.pitch)).toEqual([
-      'C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5',
-    ]);
+    expect(notes.filter((n) => n.unlocked).map((n) => n.pitch)).toEqual(['G4', 'A4', 'B4']);
 
     expect(db.prepare('SELECT stage FROM track_progress ORDER BY track').all().map((r) => r.stage))
       .toEqual(['J1', 'R1', 'T1']);

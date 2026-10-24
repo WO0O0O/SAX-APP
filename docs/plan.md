@@ -14,7 +14,7 @@ For the coding agent. Build in phases; each phase is usable on its own. Read `ov
 
 ## Phase 0: Setup
 - Vite + React + TS + Tailwind scaffold, plus a small local Node server with `node:sqlite`. `npm start` serves everything on localhost.
-- SQL migration from `app-spec.md`; seed data: profile range C4-D#6, unlocked notes (C major middle octave plus whatever the student confirms), curriculum stages from `curriculum.md`.
+- SQL migration from `app-spec.md`; seed data: profile range C4-D#6, unlocked notes (R1 of the fingering ladder: G4, A4, B4), curriculum stages from `curriculum.md`.
 - `data/` git-ignored, with a one-command backup/export of the database.
 - Repo README with run instructions.
 - **Acceptance:** `npm start` runs; migration applies; seed loads.
