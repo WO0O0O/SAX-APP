@@ -13,7 +13,7 @@ The same React app runs in two places. **Almost everything happens in the browse
  https://wo0o0o.github.io/SAX-APP/             http://127.0.0.1:5757
 
  git push ─▶ GitHub Actions                    bin/sax ─▶ builds dist/ if needed
-            (test + build on Vercel or Pages)            │
+            (test + build on Vercel or Pages)             │
                  │                                        ▼
                  ▼                             node server/index.ts (Hono)
           GitHub Pages: static files            ├─ serves dist/
