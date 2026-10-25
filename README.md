@@ -79,6 +79,6 @@ Environment: `SAX_PORT` (default 5757), `SAX_DATA_DIR` (default `./data`).
 - `server/`: the Mac-only API and SQLite database.
 - `vercel.json`: how the online copy is built and deployed on Vercel (every push to `main`).
 - `public/sealed/`: encrypted sheet music for the online copy.
-- `docs/`: start with [status.md](docs/status.md); [architecture.md](docs/architecture.md) explains how it all works; [sheet-music.md](docs/sheet-music.md) shows how a PDF becomes the interactive Tunes chart.
+- `docs/`: start with [status.md](docs/status.md); [architecture.md](docs/architecture.md) explains how it all works; [sheet-music.md](docs/sheet-music.md) shows how a PDF becomes the interactive Tunes chart; [roadmap.md](docs/roadmap.md) has what's coming next.
 
 Not in git: `data/` (my progress), `sheet-music/` (PDFs and charts), `node_modules/`, `dist/`.

@@ -126,6 +126,7 @@ All files in git are needed. Here's what each is for.
 | `status.md` | **Start here.** Where things stand, decisions, what's next. |
 | `architecture.md` | This file. |
 | `sheet-music.md` | How a PDF becomes the interactive chart on the Tunes tab, with diagrams. |
+| `roadmap.md` | Agreed future work, in build order, with a plan for each phase. |
 | `overview.md` | Who it's for, goals, the 3-month test. |
 | `curriculum.md` | The teaching plan the Claude tutor follows. The app doesn't enforce it. |
 | `tutor-instructions.md` | Paste into the Claude tutor project. |

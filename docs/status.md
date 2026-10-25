@@ -1,6 +1,6 @@
 # Status (living file: update every session)
 
-**Last updated:** 2026-10-24
+**Last updated:** 2026-10-25
 **State:** in daily use; development paused (2026-10-24). Online at https://sax.wo0.dev (Vercel, any device, nothing saved); progress saved only on the Mac via `sax`. How it's built: [architecture.md](architecture.md).
 
 ## What the app is
@@ -19,6 +19,8 @@ Free practice areas, no timers. Fingerings for every written note are the core, 
 - Schema trimmed to tunes, tune_progress, notes_progress (migration 003); timed-session tables dropped. `app-spec.md` and `plan.md` retired; their live content is here and in `architecture.md`. (2026-10-24)
 - Online copy (static, no server, Progress hidden); sheet music published encrypted with a passphrase (`npm run seal`). Phone: dropdown scale picker, fewer bars per line. (2026-10-24)
 - Hosted on Vercel at **sax.wo0.dev** (CNAME on name.com); GitHub Pages copy retired. Deploy via `vercel.json` (tests run before build, security headers). Online mode is detected from the address (not localhost = online), so no host settings are needed. (2026-10-24)
+- Pitch detection is now in scope (tuner, Reading that listens), reversing the original "no pitch detection" non-goal. The iOS Blue Note Tuner showed it works for single notes. (2026-10-25)
+- Earlier iOS app: `1. DEV/music-tuner-app` (Swift/AudioKit "Blue Note Tuner": tuner, long tones, drone, metronome, intonation stats, listening sight-reading; GitHub `sax-app`). `1. DEV/music-teach` is an older 3-commit draft of it. Features are being ported to this web app (roadmap phases 5 and 7). (2026-10-25)
 - Local API hardened against DNS rebinding (Host check) and cross-site posts (JSON-only writes). (2026-10-24)
 
 ## Built
@@ -37,11 +39,16 @@ Free practice areas, no timers. Fingerings for every written note are the core, 
 - The chart shows low B♭/B with the right-pinky C key held; check on his horn.
 
 ## Roadmap
-1. Reading: save fumbles and attempts; weight exercises toward high-lookup notes; silent-fingering mode; optional key signatures.
-2. Tunes: Naima chart; chords for Smooth Operator; analysis panel (key centres, ii-V-Is) per tune.
-3. Backing tracks in the browser (Tone.js): chords, walking bass, swing drums, any key and tempo; presets for Autumn Leaves, Smooth Operator, 12-bar blues, So What. Chord symbols shown in written pitch.
-4. Export a practice log for the Claude tutor project (format in `tutor-instructions.md`).
-5. Stretch: record and self-listen, saved to local disk.
+Full plans: [roadmap.md](roadmap.md). Build order (agreed 2026-10-25):
+1. Fingering quiz
+2. Chord tones from tunes
+3. Sound (Tone.js: notes, scales, tune playback with cursor)
+4. Backing tracks
+5. Drone and metronome (ported from the iOS Blue Note Tuner)
+6. Ear training
+7. Tuner: browser port of Blue Note Tuner, plus long tones, intonation stats, Reading that listens
+
+Any time: transpose tunes, fade note names, finish Reading. Stretch: phone app (PWA, offline), record and self-listen, tutor export.
 
 ## Rules that must not break
 - Everything shown is **written alto pitch**. Concert pitch only when labelled. Written = concert + major 6th (concert C = written A, B♭ = G, G minor = E minor).
