@@ -16,6 +16,14 @@
       "sha256": "a80a06009d8d69716675983c97f85180d69323789f2f5ff11938d3750892196a",
       "bytes": 1986
     },
+    "happy-birthday.pdf": {
+      "sha256": "c510a301684d1d03c4c8931bc3806361415c1b8b863bc764cf8f9177b2e64afa",
+      "bytes": 50618
+    },
+    "happy-birthday.tune.json": {
+      "sha256": "ae87d79cc2b654949db021576e377bd7c57c83118d6c885701752192b8bf873a",
+      "bytes": 612
+    },
     "naima.pdf": {
       "sha256": "e7e051b5e6e284d1407c5633db8af19fe6d27c778b9a519393434f112570ff8c",
       "bytes": 167278
