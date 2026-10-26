@@ -12,7 +12,7 @@ describe('chart tokens', () => {
 });
 
 // The charts are local-only (git-ignored), so these run only where they exist.
-for (const slug of ['autumn-leaves', 'smooth-operator']) {
+for (const slug of ['autumn-leaves', 'smooth-operator', 'naima']) {
   const file = new URL(`../../sheet-music/${slug}.tune.json`, import.meta.url);
   describe.skipIf(!existsSync(file))(`${slug} chart`, () => {
     it('every bar is 4 beats and every note is on the horn', () => {

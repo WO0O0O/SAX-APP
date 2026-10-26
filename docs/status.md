@@ -1,6 +1,6 @@
 # Status (living file: update every session)
 
-**Last updated:** 2026-10-25
+**Last updated:** 2026-10-26
 **State:** in daily use; development paused (2026-10-24). Online at https://sax.wo0.dev (Vercel, any device, nothing saved); progress saved only on the Mac via `sax`. How it's built: [architecture.md](architecture.md).
 
 ## What the app is
@@ -26,7 +26,7 @@ Free practice areas, no timers. Fingerings for every written note are the core, 
 ## Built
 - **Scales:** circle of fifths, 21 scales with sound / use / songs, one octave + whole horn in notation, a fingering card per note.
 - **All notes:** every note B♭3–F♯6 with alternates.
-- **Tunes:** Autumn Leaves (pickup + 32 bars, chords) and Smooth Operator (9 bars) from the Online Sax Academy PDFs. Tap for fingering, note names toggle, fingering card for every note in the tune, editable milestone.
+- **Tunes:** Autumn Leaves (pickup + 32 bars, chords) and Smooth Operator (9 bars) from the Online Sax Academy PDFs; Naima (40 bars, no chords, from a PNG lead sheet converted to `naima.pdf`). Tap for fingering, note names toggle, fingering card for every note in the tune, editable milestone.
 - **Reading:** generated exercises in the chosen key + scale within his range; check fingering (saved as a lookup) or mark fumbled.
 - **Progress:** editable milestone / best tempo / no-chart per tune; lookups per note.
 - Tests: transposition, spelling, scales, generator, charts, fingerings, DB, API.
@@ -34,7 +34,7 @@ Free practice areas, no timers. Fingerings for every written note are the core, 
 ## Open questions
 - Plain copies of `autumn-leaves-easy.pdf` and `smooth-operator-sade.pdf` remain in the first commit's history. The student chose to leave them; a history rewrite + force push would remove them.
 - Passphrase strength decides how well the sealed sheet music is protected (see architecture.md §7.6).
-- Naima and In a Sentimental Mood: no charts yet (add PDFs to `sheet-music/`).
+- In a Sentimental Mood: no chart yet (add a PDF to `sheet-music/`). Naima's chart has no chord symbols.
 - Scale songs/descriptions: he'll flag any that feel wrong.
 - The chart shows low B♭/B with the right-pinky C key held; check on his horn.
 
