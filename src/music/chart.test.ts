@@ -12,13 +12,14 @@ describe('chart tokens', () => {
 });
 
 // The charts are local-only (git-ignored), so these run only where they exist.
-for (const slug of ['autumn-leaves', 'smooth-operator', 'naima']) {
+for (const slug of ['autumn-leaves', 'smooth-operator', 'naima', 'happy-birthday']) {
   const file = new URL(`../../sheet-music/${slug}.tune.json`, import.meta.url);
   describe.skipIf(!existsSync(file))(`${slug} chart`, () => {
-    it('every bar is 4 beats and every note is on the horn', () => {
+    it('every bar fills the time signature and every note is on the horn', () => {
       const chart = parseChart(JSON.parse(readFileSync(file, 'utf8')) as ChartFile);
+      const beats = Number((chart.timeSig ?? '4/4').split('/')[0]);
       chart.bars.forEach((bar, i) => {
-        expect(bar.reduce((s, it) => s + beatsOf(it), 0), `bar ${i}`).toBeCloseTo(4);
+        expect(bar.reduce((s, it) => s + beatsOf(it), 0), `bar ${i}`).toBeCloseTo(beats);
         for (const it of bar) if (it.note) expect(it.note.midi).toBeGreaterThanOrEqual(58);
       });
     });

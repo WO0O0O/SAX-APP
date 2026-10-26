@@ -105,7 +105,7 @@ The tie mark (⌒) between the eighth and the half becomes `~` on the first of t
 ## 4. Checking the transcription
 
 [src/music/chart.test.ts](../src/music/chart.test.ts) loads every chart it finds in `sheet-music/` and checks that:
-- **every bar adds up to exactly 4 beats** (counting dots and triplets);
+- **every bar adds up to exactly the time signature** (4/4 unless the chart sets `"timeSig"`, e.g. `"3/4"`) (counting dots and triplets);
 - every note is playable on the alto (low B♭ or higher).
 
 A missing dot, a quarter written as a half, or a forgotten triplet mark changes a bar's length, so the test catches most transcription mistakes. It can't catch a wrong *pitch*; compare against the PDF while playing. The test skips itself where `sheet-music/` doesn't exist (for example on Vercel), because the charts aren't in git.
@@ -253,7 +253,7 @@ The file name must match the tune's title as a "slug": `Smooth Operator` → `sm
 ## 10. Current limits
 
 The renderer handles what the current charts need. A new chart might need more:
-- **4/4 only:** the Tunes tab always passes `4/4`. `Score` itself takes any time signature.
+- **Time signature:** 4/4 by default; a chart can set `"timeSig": "3/4"` (Happy Birthday does). No changing metre mid-tune.
 - **One melody line.** No chords on the staff, no second voice.
 - **No repeat signs, first/second endings, D.C./coda, dynamics, articulations or lyrics.** Charts that use them are written out in full.
 - **No slurs.** Only ties (same pitch). A slur in the PDF can be left out; it doesn't change the notes or fingerings.

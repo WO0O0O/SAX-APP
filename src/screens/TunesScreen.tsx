@@ -162,7 +162,7 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                     bars={loaded.bars}
                     chords={loaded.chords}
                     barsPerLine={narrow ? 2 : 4}
-                    timeSig="4/4"
+                    timeSig={loaded.timeSig ?? "4/4"}
                     keySig={loaded.keySig}
                     labels={labels}
                     colors={looked}

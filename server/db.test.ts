@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { openDb } from './db.ts';
 import { seed } from './seed.ts';
+import { TUNES } from '../shared/tunes.ts';
 
 const tables = (db: ReturnType<typeof openDb>) =>
   db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name").all().map((r) => r.name);
@@ -17,7 +18,7 @@ describe('database', () => {
     const db = openDb(':memory:');
     seed(db);
     seed(db);
-    expect(db.prepare('SELECT count(*) AS n FROM tunes').get()).toEqual({ n: 6 });
-    expect(db.prepare('SELECT count(*) AS n FROM tune_progress WHERE stage = 0').get()).toEqual({ n: 6 });
+    expect(db.prepare('SELECT count(*) AS n FROM tunes').get()).toEqual({ n: TUNES.length });
+    expect(db.prepare('SELECT count(*) AS n FROM tune_progress WHERE stage = 0').get()).toEqual({ n: TUNES.length });
   });
 });

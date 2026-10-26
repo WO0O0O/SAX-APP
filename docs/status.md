@@ -26,7 +26,7 @@ Free practice areas, no timers. Fingerings for every written note are the core, 
 ## Built
 - **Scales:** circle of fifths, 21 scales with sound / use / songs, one octave + whole horn in notation, a fingering card per note.
 - **All notes:** every note B♭3–F♯6 with alternates.
-- **Tunes:** Autumn Leaves (pickup + 32 bars, chords) and Smooth Operator (9 bars) from the Online Sax Academy PDFs; Naima (40 bars, no chords, from a PNG lead sheet converted to `naima.pdf`). Tap for fingering, note names toggle, fingering card for every note in the tune, editable milestone.
+- **Tunes:** Autumn Leaves (pickup + 32 bars, chords) and Smooth Operator (9 bars) from the Online Sax Academy PDFs; Naima (40 bars, no chords) and Happy Birthday (3/4), both from PNG lead sheets converted to PDF. Tap for fingering, note names toggle, fingering card for every note in the tune, editable milestone.
 - **Reading:** generated exercises in the chosen key + scale within his range; check fingering (saved as a lookup) or mark fumbled.
 - **Progress:** editable milestone / best tempo / no-chart per tune; lookups per note.
 - Tests: transposition, spelling, scales, generator, charts, fingerings, DB, API.

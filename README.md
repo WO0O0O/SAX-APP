@@ -14,7 +14,7 @@ A personal alto sax practice app: every fingering on the horn, scales from the c
 |---|---|
 | **Scales** | Pick a key on the circle of fifths and one of 21 scales (major and modes, minors, pentatonics, blues, bebop, symmetric). Shows how it sounds, where it's used, songs that use it, the notes on the staff for one octave and the whole horn (low B♭ to high F♯), and a fingering for every note. |
 | **All notes** | Every written note from low B♭ to high F♯, with alternate fingerings. |
-| **Tunes** | My charts (Autumn Leaves, Smooth Operator, Naima) with chord symbols. Tap any note for its fingering, see every fingering the tune uses, open the original PDF. |
+| **Tunes** | My charts (Autumn Leaves, Smooth Operator, Naima, Happy Birthday) with chord symbols. Tap any note for its fingering, see every fingering the tune uses, open the original PDF. |
 | **Reading** | Endless sight-reading exercises in the chosen key and scale. Play first; tap a note only if you need its fingering. |
 | **Progress** | Tune milestones and which notes I look up most. *Mac only (see below).* |
 

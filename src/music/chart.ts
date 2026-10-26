@@ -13,6 +13,7 @@ export type ChartFile = {
   writtenKey: string;
   concertKey: string;
   keySig: string; // VexFlow key spec, e.g. 'G', 'F'
+  timeSig?: string; // default '4/4'
   pdf?: string; // original PDF in sheet-music/
   bars: { notes: string; chords?: string[] }[];
 };

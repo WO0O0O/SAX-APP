@@ -343,7 +343,7 @@ It stays cheap to run because animations only change `transform` and `opacity`, 
 | `shared/theory.test.ts` | Transposition, spelling, octave edge cases, MIDI parsing |
 | `src/music/build.test.ts` | Scales across the horn stay in range; blues spelling |
 | `src/music/exercise.test.ts` | Every scale × 25 seeds: in range, in scale, 4 beats, ends on tonic |
-| `src/music/chart.test.ts` | Chart tokens; every bar of your charts is 4 beats |
+| `src/music/chart.test.ts` | Chart tokens; every bar of your charts fills its time signature |
 | `src/fingering/fingerings.test.ts` | Every note B♭3–F♯6 has a fingering; spot checks against the chart |
 | `server/db.test.ts` | Migrations leave exactly the expected tables; seeding runs once |
 | `server/api.test.ts` | Tune updates and validation, lookup counting, the path-escape guard |
@@ -356,8 +356,8 @@ It stays cheap to run because animations only change `transform` and `opacity`, 
 
 | You want to… | Do this |
 |---|---|
-| Add a tune chart | Put the PDF in `sheet-music/` and ask Claude to transcribe it to `sheet-music/<slug>.tune.json`, where the slug is the title in lowercase with dashes. Run `npm test` to check the bar lengths. For the online copy: `npm run seal`, commit `public/sealed/`, push. |
-| Add a tune to the list | Add a row to `tunes` and `tune_progress` with a new migration (or ask Claude). |
+| Add a tune chart | Put the PNG or PDF in `sheet-music/` and ask Claude to transcribe it to `sheet-music/<slug>.tune.json`, where the slug is the title in lowercase with dashes. Run `npm test` to check the bar lengths. For the online copy: `npm run seal`, commit `public/sealed/`, push. |
+| Add a tune to the list | Add a line to `shared/tunes.ts`. `sax` adds any tune missing from the database at startup (matched by title), so no migration is needed. |
 | Add or edit a scale | Add an entry to `SCALES` in `src/music/scales.ts` (degrees + sound / use / songs). It appears everywhere automatically. |
 | Widen your range | Change `shared/student.ts`. Grey "stretch" notes and the Reading generator follow it. |
 | Save something new | Add a migration (`004_….sql`), an endpoint in `server/api.ts` with a test, and a function in `src/api.ts`. |
