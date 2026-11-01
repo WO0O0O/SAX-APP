@@ -1,15 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { parseChord } from '../../shared/chords.ts';
-import { noteName } from '../../shared/theory.ts';
-import { getTunes, loadChart, logLookup, MILESTONES, openPdf, slugOf, type Tune } from '../api.ts';
+import { noteName, nameOf, parseSpelling, type Note } from '../../shared/theory.ts';
+import { STUDENT_RANGE } from '../../shared/student.ts';
+import { getNotes, getQuizStats, getTunes, loadChart, logLookup, MILESTONES, openPdf, slugOf, type Tune } from '../api.ts';
+import { previewNote } from '../audio/engine.ts';
+import { getSettings } from '../audio/settings.ts';
 import { FingeringCard } from '../fingering/FingeringCard.tsx';
 import { FingeringDiagram } from '../fingering/FingeringDiagram.tsx';
 import { FINGERINGS, describe } from '../fingering/fingerings.ts';
 import { parseChart, type Chart, type ChartFile } from '../music/chart.ts';
-import { ROLE_COLORS, ROLE_NAMES, toneColors } from '../music/chordTones.ts';
+import { arpeggio, ROLE_COLORS, ROLE_NAMES, toneColors } from '../music/chordTones.ts';
+import { fadeFor } from '../music/known.ts';
+import type { Stats } from '../music/quiz.ts';
+import { keyChoices, transposeChart } from '../music/transpose.ts';
 import { Score } from '../notation/Score.tsx';
 import { ChordPanel } from '../tunes/ChordPanel.tsx';
+import { PlaybackBar } from '../tunes/PlaybackBar.tsx';
 import { TuneProgress } from '../tunes/TuneProgress.tsx';
+import { useTunePlayback } from '../tunes/useTunePlayback.ts';
 import { NoteText } from '../ui/NoteText.tsx';
 import { UnlockPanel } from '../ui/UnlockPanel.tsx';
 import { useNarrow } from '../ui/useNarrow.ts';
@@ -19,6 +27,8 @@ import '../notation/score.css';
 
 const LOOKUP = '#9a5410';
 const STORE = 'sax.tune.v1';
+const outsideRange = (n: Note) => n.midi < STUDENT_RANGE.low || n.midi > STUDENT_RANGE.high;
+const sym = (s: string) => s.replace(/b(?=\d|$)/g, '♭').replace(/#/g, '♯');
 
 export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) => void }) {
   const [tunes, setTunes] = useState<Tune[]>([]);
@@ -37,10 +47,23 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
   const [looked, setLooked] = useState<Record<number, string>>({});
   const [chordSel, setChordSel] = useState<{ bar: number; index: number } | undefined>();
   const [colourTones, setColourTones] = useState(false);
+  const [semis, setSemis] = useState(0);
+  const [stats, setStats] = useState<Stats>({});
+  const [fadeKnown, setFadeKnown] = useState(true);
+  const [fadeAll, setFadeAll] = useState(0); // online: a hand-set slider
 
   useEffect(() => onSceneDim(0.5), [onSceneDim]);
   useEffect(() => {
     getTunes().then(setTunes).catch(() => setTunes([]));
+  }, []);
+  // What the student knows (Mac only), for fading note names.
+  useEffect(() => {
+    Promise.all([getQuizStats(), getNotes()]).then(([quiz, notes]) => {
+      const s: Stats = {};
+      for (const n of notes) s[n.midi] = { answered: 0, correct: 0, lookups: n.lookups };
+      for (const q of quiz) s[q.midi] = { ...(s[q.midi] ?? { lookups: 0 }), answered: q.answered, correct: q.correct };
+      setStats(s);
+    });
   }, []);
 
   const tune = tunes.find((t) => t.id === tuneId) ?? tunes[0];
@@ -56,30 +79,21 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
     setSelected(undefined);
     setLooked({});
     setChordSel(undefined);
+    setSemis(0);
     loadChart<ChartFile>(slugOf(tune.title))
       .then((file) => setChart(parseChart(file)))
       .catch((e) => setChart(e instanceof LockedError ? 'locked' : 'missing'));
   }, [tune?.id, reload]);
 
-  const loaded = chart && typeof chart === 'object' ? chart : null;
+  const original = chart && typeof chart === 'object' ? chart : null;
+  const loaded = useMemo(() => (original ? transposeChart(original, semis) : null), [original, semis]);
+  const choices = useMemo(() => (original ? keyChoices(original.keySig) : []), [original]);
   const items = useMemo(() => (loaded ? loaded.bars.flat() : []), [loaded]);
   const uniqueNotes = useMemo(() => {
     const byMidi = new Map(items.filter((it) => it.note).map((it) => [it.note!.midi, it.note!]));
     return [...byMidi.values()].sort((a, b) => a.midi - b.midi);
   }, [items]);
-
-  const onTap = useCallback(
-    (i: number) => {
-      const note = items[i]?.note;
-      if (!note) return;
-      setSelected(i);
-      if (!looked[i]) {
-        setLooked((l) => ({ ...l, [i]: LOOKUP }));
-        logLookup(note.midi);
-      }
-    },
-    [items, looked],
-  );
+  const stretch = uniqueNotes.filter(outsideRange).length;
 
   const chordList = useMemo(
     () =>
@@ -92,9 +106,39 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
   const chordPos = chordSel ? chordList.findIndex((c) => c.bar === chordSel.bar && c.index === chordSel.index) : -1;
   const tones = useMemo(() => (loaded && colourTones ? toneColors(loaded) : {}), [loaded, colourTones]);
   const colors = useMemo(() => ({ ...tones, ...looked }), [tones, looked]);
+  const labelFade = useCallback(
+    (n: Note) => (HOSTED ? fadeAll : fadeKnown ? fadeFor(stats[n.midi]) : 0),
+    [fadeKnown, fadeAll, stats],
+  );
 
-  const note = selected !== undefined ? items[selected]?.note : undefined;
+  const pb = useTunePlayback(loaded);
+
+  const onTap = useCallback(
+    (i: number) => {
+      const note = items[i]?.note;
+      if (!note) return;
+      setSelected(i);
+      if (getSettings().tapSounds && !pb.playing) previewNote(note.midi);
+      if (!looked[i]) {
+        setLooked((l) => ({ ...l, [i]: LOOKUP }));
+        logLookup(note.midi);
+      }
+    },
+    [items, looked, pb.playing],
+  );
+
+  // While playing, the fingering panel follows the cursor.
+  const shownIndex = pb.playing && pb.cursor !== undefined ? pb.cursor : selected;
+  const note = shownIndex !== undefined ? items[shownIndex]?.note : undefined;
   const fingering = note ? FINGERINGS[note.midi]?.[0] : undefined;
+
+  const playChord = (kind: 'arpeggio' | 'chord') => {
+    const chord = chordList[chordPos]?.chord;
+    if (!chord) return;
+    const arp = arpeggio(chord);
+    if (kind === 'arpeggio') pb.playNotes(arp, 'line');
+    else pb.playNotes(arp.slice(0, -1), 'chord');
+  };
 
   return (
     <div className="mx-auto grid w-full max-w-[1400px] items-start gap-5 lg:grid-cols-[250px_minmax(0,1fr)]">
@@ -125,9 +169,22 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
         <div className="min-w-0 space-y-5">
           <section className="panel p-6">
             <h1 className="font-display text-4xl">{tune.title}</h1>
-            {loaded && (
+            {loaded && original && (
               <p className="mt-1 text-smoke-dim">
-                Written for alto in <span className="text-smoke">{loaded.writtenKey}</span> (concert {loaded.concertKey}) · {loaded.arranger}
+                {semis === 0 ? (
+                  <>
+                    Written for alto in <span className="text-smoke">{loaded.writtenKey}</span> (concert {loaded.concertKey})
+                  </>
+                ) : (
+                  <>
+                    Transposed {semis > 0 ? 'up' : 'down'} {Math.abs(semis)} {Math.abs(semis) === 1 ? 'semitone' : 'semitones'} (key signature{' '}
+                    <span className="text-smoke">
+                      <NoteText text={nameOf(parseSpelling(loaded.keySig))} />
+                    </span>
+                    )
+                  </>
+                )}{' '}
+                · {loaded.arranger}
                 {loaded.pdf && (
                   <>
                     {' · '}
@@ -170,20 +227,52 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
               <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_240px]">
                 <article className="paper px-5 pt-4 pb-2">
                   <header className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="caps text-lookup">Chart · tap a note for its fingering</p>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                    {hasChords && (
-                      <label className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" checked={colourTones} onChange={(e) => setColourTones(e.target.checked)} className="size-4 accent-lookup" />
-                        Colour chord tones
+                    <p className="caps text-lookup">Chart · tap a note for its fingering{hasChords ? ' · tap a chord for its notes' : ''}</p>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                      <label className="flex items-center gap-2">
+                        <span className="text-paper-ink/70">Key</span>
+                        <select value={semis} onChange={(e) => setSemis(Number(e.target.value))} className="rounded-md border border-paper-ink/25 bg-transparent px-2 py-1" aria-label="Transpose">
+                          {choices.map((c) => (
+                            <option key={c.semis} value={c.semis}>
+                              {c.semis === 0 ? 'Original' : `${c.semis > 0 ? '+' : '−'}${Math.abs(c.semis)} · ${sym(c.keySig)}`}
+                            </option>
+                          ))}
+                        </select>
                       </label>
-                    )}
-                    <label className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" checked={labels} onChange={(e) => setLabels(e.target.checked)} className="size-4 accent-lookup" />
-                      Note names
-                    </label>
+                      {hasChords && (
+                        <label className="flex items-center gap-2">
+                          <input type="checkbox" checked={colourTones} onChange={(e) => setColourTones(e.target.checked)} className="size-4 accent-lookup" />
+                          Colour chord tones
+                        </label>
+                      )}
+                      <label className="flex items-center gap-2">
+                        <input type="checkbox" checked={labels} onChange={(e) => setLabels(e.target.checked)} className="size-4 accent-lookup" />
+                        Note names
+                      </label>
+                      {labels &&
+                        (HOSTED ? (
+                          <label className="flex items-center gap-2">
+                            <span className="text-paper-ink/70">Fade</span>
+                            <input type="range" min={0} max={0.9} step={0.05} value={fadeAll} onChange={(e) => setFadeAll(Number(e.target.value))} className="w-20 accent-lookup" aria-label="Fade note names" />
+                          </label>
+                        ) : (
+                          <label className="flex items-center gap-2" title="Names fade for notes you answer correctly in the quiz and rarely look up">
+                            <input type="checkbox" checked={fadeKnown} onChange={(e) => setFadeKnown(e.target.checked)} className="size-4 accent-lookup" />
+                            Fade names I know
+                          </label>
+                        ))}
                     </div>
                   </header>
+                  <PlaybackBar
+                    pb={pb}
+                    canPlayFrom={selected !== undefined && Boolean(items[selected]?.note)}
+                    onPlayFrom={() => pb.start(selected)}
+                  />
+                  {stretch > 0 && semis !== 0 && (
+                    <p className="mt-2 text-xs text-paper-ink/65">
+                      {stretch} {stretch === 1 ? 'note falls' : 'notes fall'} outside your range ({STUDENT_RANGE.lowName}–{STUDENT_RANGE.highName}); they are fingered but greyed in the list below.
+                    </p>
+                  )}
                   {colourTones && (
                     <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs" aria-label="Colour key">
                       {(['root', 'third', 'fifth', 'seventh', 'extension'] as const).map((r) => (
@@ -198,15 +287,18 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                   <Score
                     bars={loaded.bars}
                     chords={loaded.chords}
-                    barsPerLine={narrow ? 2 : loaded.timeSig === "12/8" ? 3 : 4}
-                    timeSig={loaded.timeSig ?? "4/4"}
+                    barsPerLine={narrow ? 2 : loaded.timeSig === '12/8' ? 3 : 4}
+                    timeSig={loaded.timeSig ?? '4/4'}
                     keySig={loaded.keySig}
                     labels={labels}
+                    labelFade={labelFade}
                     colors={colors}
-                    selected={selected}
+                    faded={semis !== 0 ? outsideRange : undefined}
+                    selected={pb.playing ? undefined : selected}
                     onTap={onTap}
                     onChordTap={hasChords ? (bar, index) => setChordSel({ bar, index }) : undefined}
                     activeChord={chordSel}
+                    cursor={pb.playing ? pb.cursor : undefined}
                     width={980}
                   />
                 </article>
@@ -231,7 +323,8 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                     <div className="py-8">
                       <p className="caps-xs text-smoke-dim">Fingering</p>
                       <p className="mt-3 text-sm text-smoke-dim">
-                        {HOSTED ? 'Tap any note in the chart.' : 'Tap any note in the chart. Each first tap counts as a lookup.'}</p>
+                        {HOSTED ? 'Tap any note in the chart.' : 'Tap any note in the chart. Each first tap counts as a lookup.'}
+                      </p>
                     </div>
                   )}
                 </aside>
@@ -243,6 +336,8 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                   chord={chordList[chordPos].chord!}
                   next={chordList[chordPos + 1]?.chord ?? null}
                   onClose={() => setChordSel(undefined)}
+                  onPlay={playChord}
+                  playing={pb.playing}
                 />
               )}
 

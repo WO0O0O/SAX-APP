@@ -3,6 +3,8 @@ import { BarScene } from './scene/BarScene.tsx';
 import { NotesScreen } from './screens/NotesScreen.tsx';
 import { ProgressScreen } from './screens/ProgressScreen.tsx';
 import { HOSTED } from './mode.ts';
+import { setVolume } from './audio/engine.ts';
+import { setSettings, useAudioSettings } from './audio/settings.ts';
 
 // VexFlow is large; only load it on the screens that draw notation.
 const ScalesScreen = lazy(() => import('./screens/ScalesScreen.tsx'));
@@ -21,6 +23,33 @@ const ALL_SCREENS = [
 type ScreenId = (typeof ALL_SCREENS)[number]['id'];
 // Progress needs the Mac's database, so the online copy leaves it out.
 const SCREENS = ALL_SCREENS.filter((s) => !HOSTED || s.id !== 'progress');
+
+/** Sound preferences: tapping notes plays them, and a master volume. */
+function SoundControls() {
+  const { tapSounds, volume } = useAudioSettings();
+  return (
+    <div className="flex items-center gap-3 rounded-full bg-ink/70 px-3 py-1.5 text-sm text-smoke-dim">
+      <label className="flex cursor-pointer items-center gap-2 hover:text-smoke" title="Tapping a note or fingering plays it">
+        <input type="checkbox" checked={tapSounds} onChange={(e) => setSettings({ tapSounds: e.target.checked })} className="size-4 accent-ember" />
+        Tap sounds
+      </label>
+      <input
+        type="range"
+        min={0}
+        max={1}
+        step={0.05}
+        value={volume}
+        onChange={(e) => {
+          const v = Number(e.target.value);
+          setSettings({ volume: v });
+          setVolume(v);
+        }}
+        className="hidden w-20 accent-ember sm:block"
+        aria-label="Volume"
+      />
+    </div>
+  );
+}
 
 export function App() {
   const [screen, setScreenState] = useState<ScreenId>(
@@ -50,6 +79,8 @@ export function App() {
             <span className="font-display text-3xl text-smoke">Sax Tutor</span>
             <span className="caps-xs hidden text-ember/90 sm:inline">{HOSTED ? 'Online copy' : 'The Late Set'}</span>
           </div>
+          <div className="flex flex-wrap items-center gap-3">
+          <SoundControls />
           <nav className="flex flex-wrap gap-1 rounded-full bg-ink/70 p-1" aria-label="Screens">
             {SCREENS.map((s) => (
               <button
@@ -65,6 +96,7 @@ export function App() {
               </button>
             ))}
           </nav>
+          </div>
         </header>
 
         <main className="flex flex-1 flex-col">

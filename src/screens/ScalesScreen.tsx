@@ -7,6 +7,10 @@ import { fullRange, oneOctave, scaleSpellings } from '../music/build.ts';
 import { ScalePicker } from '../music/ScalePicker.tsx';
 import { usePicker } from '../music/usePicker.ts';
 import { NoteText } from '../ui/NoteText.tsx';
+import { PlayScale } from '../ui/PlayScale.tsx';
+import { previewNote } from '../audio/engine.ts';
+import { getSettings } from '../audio/settings.ts';
+import { useTunePlayback } from '../tunes/useTunePlayback.ts';
 import { useNarrow } from '../ui/useNarrow.ts';
 import '../notation/score.css';
 
@@ -28,6 +32,8 @@ export default function ScalesScreen({ onSceneDim }: { onSceneDim: (dim: number)
   const { tonic, scale } = picker;
   const [selected, setSelected] = useState<number | null>(null);
   const cards = useRef(new Map<number, HTMLElement>());
+  const pb = useTunePlayback(null);
+  const [playing, setPlaying] = useState<'octave' | 'full' | null>(null);
 
   useEffect(() => onSceneDim(0.5), [onSceneDim]);
 
@@ -39,10 +45,28 @@ export default function ScalesScreen({ onSceneDim }: { onSceneDim: (dim: number)
   const octaveBars = useMemo(() => (narrow ? toLines(octave, 5) : [asWhole(octave)]), [octave, narrow]);
   const concert = nameOf(writtenToConcert(parseSpelling(tonic)));
 
-  useEffect(() => setSelected(null), [tonic, scale]);
+  useEffect(() => {
+    setSelected(null);
+    pb.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tonic, scale]);
+  useEffect(() => {
+    if (!pb.playing) setPlaying(null);
+  }, [pb.playing]);
+  // The sequence plays up and then back down; map the cursor back onto the written notes.
+  const cursorIn = (notes: Note[], which: 'octave' | 'full') => {
+    if (playing !== which || pb.cursor === undefined) return undefined;
+    return pb.cursor < notes.length ? pb.cursor : 2 * (notes.length - 1) - pb.cursor;
+  };
+  const toggle = (which: 'octave' | 'full', notes: Note[]) => {
+    if (playing === which) return pb.stop();
+    setPlaying(which);
+    pb.playNotes(notes, 'line');
+  };
 
   const select = useCallback((midi: number) => {
     setSelected(midi);
+    if (getSettings().tapSounds) previewNote(midi);
     cards.current.get(midi)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, []);
   const tapOctave = useCallback((i: number) => select(octave[i].midi), [octave, select]);
@@ -100,18 +124,22 @@ export default function ScalesScreen({ onSceneDim }: { onSceneDim: (dim: number)
         </section>
 
         <section className="paper px-6 pt-5 pb-3">
-          <h2 className="caps text-lookup">One octave</h2>
-          <Score bars={octaveBars} barsPerLine={1} labels selected={octaveSel} onTap={tapOctave} width={760} />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="caps text-lookup">One octave</h2>
+            <PlayScale playing={playing === 'octave'} onToggle={() => toggle('octave', octave)} bpm={pb.bpm} setBpm={pb.setBpm} label="Play up and down" />
+          </div>
+          <Score bars={octaveBars} barsPerLine={1} labels selected={octaveSel} onTap={tapOctave} cursor={cursorIn(octave, 'octave')} width={760} />
         </section>
 
         <section className="paper px-6 pt-5 pb-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="caps text-lookup">Whole horn · low B♭ to high F♯</h2>
+            <PlayScale playing={playing === 'full'} onToggle={() => toggle('full', full)} bpm={pb.bpm} setBpm={pb.setBpm} label="Play up and down" />
             <p className="text-sm text-paper-ink/60">
               Grey notes are outside your current range ({STUDENT_RANGE.lowName}–{STUDENT_RANGE.highName}). Tap a note for its fingering.
             </p>
           </div>
-          <Score bars={fullBars} barsPerLine={1} labels faded={outsideRange} selected={fullSel} onTap={tapFull} />
+          <Score bars={fullBars} barsPerLine={1} labels faded={outsideRange} selected={fullSel} onTap={tapFull} cursor={cursorIn(full, 'full')} />
         </section>
 
         <section>

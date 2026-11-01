@@ -10,6 +10,11 @@ import { ScalePicker } from '../music/ScalePicker.tsx';
 import { usePicker } from '../music/usePicker.ts';
 import { NoteText } from '../ui/NoteText.tsx';
 import { logLookup } from '../api.ts';
+import { previewNote } from '../audio/engine.ts';
+import { getSettings } from '../audio/settings.ts';
+import type { Chart } from '../music/chart.ts';
+import { PlaybackBar } from '../tunes/PlaybackBar.tsx';
+import { useTunePlayback } from '../tunes/useTunePlayback.ts';
 import '../notation/score.css';
 
 type Mode = 'check' | 'fumble';
@@ -34,6 +39,12 @@ export default function ReadingScreen({ onSceneDim }: { onSceneDim: (dim: number
     [tonic, scale, bars, seed],
   );
   const notes = useMemo(() => exercise.flat().map((it) => it.note!), [exercise]);
+  // Hear the exercise (after you've tried it): it plays through the same controls as a tune.
+  const asChart = useMemo<Chart>(
+    () => ({ title: `reading-${seed}`, arranger: '', writtenKey: '', concertKey: '', keySig: 'C', tempo: 80, bars: exercise, chords: exercise.map(() => []) }),
+    [exercise, seed],
+  );
+  const pb = useTunePlayback(asChart);
 
   // A fresh exercise resets the marks.
   useEffect(() => {
@@ -48,6 +59,7 @@ export default function ReadingScreen({ onSceneDim }: { onSceneDim: (dim: number
 
   const onTap = useCallback(
     (i: number) => {
+      if (getSettings().tapSounds && !pb.playing) previewNote(notes[i].midi);
       if (mode === 'check') {
         setSelected(i);
         if (!marks[i]) {
@@ -63,7 +75,7 @@ export default function ReadingScreen({ onSceneDim }: { onSceneDim: (dim: number
         });
       }
     },
-    [mode, marks, notes],
+    [mode, marks, notes, pb.playing],
   );
 
   useEffect(() => {
@@ -129,8 +141,9 @@ export default function ReadingScreen({ onSceneDim }: { onSceneDim: (dim: number
             </div>
           </header>
 
+          <PlaybackBar pb={pb} canPlayFrom={false} onPlayFrom={() => {}} />
           <div className="mt-3">
-            <Score bars={exercise} barsPerLine={2} timeSig="4/4" colors={colors} selected={selected} onTap={onTap} />
+            <Score bars={exercise} barsPerLine={2} timeSig="4/4" colors={colors} selected={selected} onTap={onTap} cursor={pb.playing ? pb.cursor : undefined} />
           </div>
 
           <footer className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-paper-ink/80">

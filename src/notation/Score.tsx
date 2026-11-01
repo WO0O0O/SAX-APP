@@ -26,6 +26,8 @@ type Props = {
   labels?: boolean;
   /** Colour per item index (across all bars, rests included). */
   colors?: Record<number, string>;
+  /** How much to fade each note's name (0 = full, 1 = hidden). */
+  labelFade?: (note: Note) => number;
   /** Faded notes (e.g. outside the student's range). */
   faded?: (note: Note) => boolean;
   selected?: number;
@@ -68,7 +70,7 @@ function keyAccidentals(keySig?: string): number[] {
 let fontsReady: Promise<unknown> | null = null;
 
 export function Score(props: Props) {
-  const { bars, barsPerLine, timeSig, keySig, chords, labels, colors = {}, faded, selected, onTap, onChordTap, activeChord, cursor, width = 900 } = props;
+  const { bars, barsPerLine, timeSig, keySig, chords, labels, labelFade, colors = {}, faded, selected, onTap, onChordTap, activeChord, cursor, width = 900 } = props;
   const host = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -102,8 +104,9 @@ export function Score(props: Props) {
     const hits: SVGElement[] = [];
     let index = 0;
 
-    const addText = (x: number, y: number, text: string, cls: string) => {
+    const addText = (x: number, y: number, text: string, cls: string, opacity?: number) => {
       const t = document.createElementNS(SVG_NS, 'text');
+      if (opacity !== undefined && opacity < 1) t.setAttribute('opacity', String(opacity));
       t.setAttribute('x', String(x));
       t.setAttribute('y', String(y));
       t.setAttribute('class', cls);
@@ -213,7 +216,7 @@ export function Score(props: Props) {
         const cx = sn.getAbsoluteX() + 6;
         const prev = drawn[drawn.findIndex((d) => d.i === i) - 1];
         const continuation = prev?.it.tie && prev.it.note?.midi === it.note.midi;
-        if (labels && !continuation) addText(cx, labelY, nameOf(it.note), i === selected ? 'note-label is-selected' : 'note-label');
+        if (labels && !continuation) addText(cx, labelY, nameOf(it.note), i === selected ? 'note-label is-selected' : 'note-label', i === selected ? 1 : 1 - (labelFade?.(it.note) ?? 0));
         if (onTap) {
           const hit = document.createElementNS(SVG_NS, 'rect');
           const hw = Math.max(box.getW() + 10, 24);
@@ -249,7 +252,7 @@ export function Score(props: Props) {
     svg.removeAttribute('height');
     svg.style.width = '100%';
     svg.style.height = 'auto';
-  }, [bars, barsPerLine, timeSig, keySig, chords, labels, colors, faded, selected, onTap, onChordTap, activeChord?.bar, activeChord?.index, width, ready]);
+  }, [bars, barsPerLine, timeSig, keySig, chords, labels, colors, faded, labelFade, selected, onTap, onChordTap, activeChord?.bar, activeChord?.index, width, ready]);
 
   // The playback cursor moves without redrawing the whole score.
   useEffect(() => {

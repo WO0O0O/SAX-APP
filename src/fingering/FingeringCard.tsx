@@ -1,4 +1,6 @@
 import { forwardRef, useState } from 'react';
+import { previewNote } from '../audio/engine.ts';
+import { getSettings } from '../audio/settings.ts';
 import { atMidi, nameOf, noteName, writtenToConcert, type Note } from '../../shared/theory.ts';
 import { STUDENT_RANGE } from '../../shared/student.ts';
 import { FingeringDiagram } from './FingeringDiagram.tsx';
@@ -23,7 +25,10 @@ export const FingeringCard = forwardRef<HTMLElement, Props>(function FingeringCa
   return (
     <article
       ref={ref}
-      onClick={onSelect}
+      onClick={() => {
+        onSelect?.();
+        if (getSettings().tapSounds) previewNote(note.midi);
+      }}
       className={`flex cursor-default flex-col rounded-xl border bg-mahogany/90 p-3 transition-colors ${
         selected ? 'border-ember shadow-[0_0_0_1px_var(--color-ember)]' : 'border-walnut/80 hover:border-leather'
       }`}

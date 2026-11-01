@@ -14,6 +14,8 @@ export type ChartFile = {
   concertKey: string;
   keySig: string; // VexFlow key spec, e.g. 'G', 'F'
   timeSig?: string; // default '4/4'
+  tempo?: number; // bpm (quarter notes) to start playback at
+  swing?: boolean; // eighths are swung
   pdf?: string; // original PDF in sheet-music/
   bars: { notes: string; chords?: string[] }[];
 };
