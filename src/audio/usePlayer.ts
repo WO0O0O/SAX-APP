@@ -6,6 +6,7 @@ export function usePlayer() {
   const player = useMemo(createPlayer, []);
   const [playing, setPlaying] = useState(false);
   const [cursor, setCursor] = useState<number | undefined>();
+  const [bar, setBar] = useState<number | undefined>();
 
   useEffect(() => () => player.stop(), [player]);
 
@@ -13,16 +14,20 @@ export function usePlayer() {
     player.stop();
     setPlaying(false);
     setCursor(undefined);
+    setBar(undefined);
   }, [player]);
 
   const play = useCallback(
-    (o: Omit<PlayOptions, 'onCursor' | 'onEnd'>) => {
+    (o: Omit<PlayOptions, 'onCursor' | 'onEnd' | 'onBeat'> & { barBeats?: number }) => {
       player.play({
         ...o,
         onCursor: (item) => setCursor(item),
+        // which bar is sounding: only changes (and re-renders) once a bar
+        onBeat: o.barBeats ? (beat) => setBar(beat < 0 ? undefined : Math.floor(beat / o.barBeats!)) : undefined,
         onEnd: () => {
           setPlaying(false);
           setCursor(undefined);
+          setBar(undefined);
         },
       });
       setPlaying(true);
@@ -30,5 +35,5 @@ export function usePlayer() {
     [player],
   );
 
-  return { playing, cursor, play, stop, setBpm: player.setBpm };
+  return { playing, cursor, bar, play, stop, setBpm: player.setBpm };
 }

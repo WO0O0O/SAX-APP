@@ -1,18 +1,18 @@
 # Roadmap
 
-Agreed plans, in build order. Each phase is usable on its own. Before starting a phase, re-read it here and in [status.md](status.md); when it's done, move it to "Built" in status.md.
+**Everything below was built on 2026-11-01.** The plans are kept as written, and each phase ends with an **As built** note saying what was delivered and where it differs from the plan. Where each part lives: [architecture.md](architecture.md); how it works: [sound-and-tuner.md](sound-and-tuner.md); how to use it: [guide.md](guide.md).
 
-| Order | Phase | In one line |
-|---|---|---|
-| 1 | [Fingering quiz](#1-fingering-quiz) | See a note → press the keys (and the reverse) |
-| 2 | [Chord tones from your tunes](#2-chord-tones-from-your-tunes) | Tap a chord symbol → its arpeggio, guide tones and fingerings |
-| 3 | [Sound](#3-sound) | Hear notes, scales and whole tunes, with a moving cursor |
-| 4 | [Backing tracks](#4-backing-tracks) | Chords, bass and drums for your tunes, any key and tempo |
-| 5 | [Drone and metronome](#5-drone-and-metronome) | Held reference note and click, ported from Blue Note Tuner |
-| 6 | [Ear training](#6-ear-training) | Hear it, name it, play it back |
-| 7 | [Tuner](#7-tuner) | Browser port of your iOS Blue Note Tuner, plus long tones, intonation stats, and Reading that listens |
-| Any time | [Quick wins](#quick-wins) | Transpose tunes, fade note names, finish Reading |
-| Stretch | [Phone app and later](#stretch) | Install on your phone, record and self-listen, tutor export |
+| Order | Phase | In one line | Status |
+|---|---|---|---|
+| 1 | [Fingering quiz](#1-fingering-quiz) | See a note → press the keys (and the reverse) | Built |
+| 2 | [Chord tones from your tunes](#2-chord-tones-from-your-tunes) | Tap a chord symbol → its arpeggio, guide tones and fingerings | Built |
+| 3 | [Sound](#3-sound) | Hear notes, scales and whole tunes, with a moving cursor | Built |
+| 4 | [Backing tracks](#4-backing-tracks) | Chords, bass and drums for your tunes, any key and tempo | Built |
+| 5 | [Drone and metronome](#5-drone-and-metronome) | Held reference note and click, ported from Blue Note Tuner | Built |
+| 6 | [Ear training](#6-ear-training) | Hear it, name it, play it back | Built |
+| 7 | [Tuner](#7-tuner) | Browser port of your iOS Blue Note Tuner, plus long tones, intonation stats, and Reading that listens | Built |
+| Any time | [Quick wins](#quick-wins) | Transpose tunes, fade note names, finish Reading | Built |
+| Stretch | [Phone app and later](#stretch) | Install on your phone, record and self-listen, tutor export | Built |
 
 **Ground rules for every phase**
 - Everything shown is **written alto pitch**. Anything that makes sound or listens converts to **concert pitch** under the hood (written − 9 semitones).
@@ -50,6 +50,8 @@ The quiz **leans toward your weak notes**: ones you've missed recently, and on t
 
 **Done when:** a 20-question round works in both modes on laptop and phone, missed notes come back, and on the Mac, Progress shows quiz accuracy per note.
 
+**As built:** all as planned. Quiz tab with the three modes, four note pools, 20-question rounds, weighting by misses and lookups, misses return after three questions, "practise the missed notes", saved accuracy (migration `004_quiz.sql`, `POST /api/quiz`, Progress). The fingering diagram's keys are real buttons (keyboard-friendly). Tests: [quiz.test.ts](../src/music/quiz.test.ts).
+
 ---
 
 ## 2. Chord tones from your tunes
@@ -74,6 +76,8 @@ A **"Colour chord tones"** toggle on the chart colours each melody note by its r
 **Tests:** every chord symbol in both charts parses and spells correctly; guide-tone lines are the smallest moves; colouring is right over a few known bars.
 
 **Done when:** every chord in Autumn Leaves opens a correct panel, the guide-tone line plays through the whole tune, and colouring works.
+
+**As built:** the chord panel (spelled tones, guide tones, arpeggio and range on the staff, fingerings, fitting scales with "Open in Scales", the move to the next chord, and **play arpeggio / chord**), "Colour chord tones" with a legend, and `shared/chords.ts` with a test that parses every chord in the tunes. The whole-tune **guide-tone line** has its own panel under the chart (staff, a chip per chord, and "Play the line"). Smooth Operator, Naima and Is It a Crime still have no chord symbols (needs lead sheets).
 
 ---
 
@@ -100,6 +104,8 @@ A **"Colour chord tones"** toggle on the chart colours each melody note by its r
 
 **Done when:** tapping notes plays them, any scale plays, and Autumn Leaves plays at any tempo with a cursor, loop and swing, on laptop and iPhone.
 
+**As built:** tap-to-hear on the staff and fingering cards, Play on scales (up and down), on every tune and on Reading exercises, with tempo 40–220, count-in, click, loop bars, light/full swing, reed or piano, play-from-selected-note, a cursor that moves without redrawing, and a Silent follow-along mode. **Differences:** built on the Web Audio API with a small look-ahead scheduler instead of Tone.js (same timing, no dependency, testable on a fake clock); the first sound is unlocked by the first tap, and `navigator.audioSession` is set so the iPhone silent switch doesn't mute it (Safari 16.4+). Not yet heard on an iPhone.
+
 ---
 
 ## 4. Backing tracks
@@ -118,6 +124,8 @@ A **"Colour chord tones"** toggle on the chart colours each melody note by its r
 
 **Done when:** you can play Autumn Leaves and a blues over a believable band, in any key and tempo, with the speed trainer.
 
+**As built:** a band for any tune with chord symbols (swing, ballad, bossa, straight eights; walking bass, shell-voicing piano, synthesised drums), Melody on/off, New take, loop and the **speed trainer** (+4 bpm every N loops). A **Backing** tab with six practice grooves in any key (12-bar blues, minor blues, ii–V–I, ii–V–i, I–vi–ii–V turnaround, So What form), links to the scales to play over each, and the sounding bar highlighted. Differences: the band sits at 75% of the melody's level rather than fixed dB figures; a sample kit was not needed.
+
 ---
 
 ## 5. Drone and metronome
@@ -129,6 +137,8 @@ Ported from Blue Note Tuner (`DroneConductor.swift`, `MetronomeConductor.swift`)
 - Both keep running while you switch tabs, so you can read a tune with the drone on.
 
 **Done when:** both work together and alongside tune playback, on laptop and phone.
+
+**As built:** the **Tools** panel from the top bar: drone (written note and octave, shows what sounds, optional fifth, volume) and metronome (tap tempo, 2–7 beats, quarters/eighths/triplets, swing, flashing beat, space to start/stop), kept in a module outside React so they run across tabs. Same sounds as the iOS app (sawtooth through a 600 Hz low-pass; 1800/900 Hz click).
 
 ---
 
@@ -142,6 +152,8 @@ Your ear is a strength, so this plays to it.
 - **Tune by ear:** play the first bars of one of your tunes with the notation hidden; you work it out on the horn, then reveal.
 
 **Done when:** each mode runs a 10-question round with feedback; call-and-response uses any scale.
+
+**As built:** the Ear tab with all four modes. Intervals and chord quality start with three items and add one per item learned (6+ answers at 80%); answers are saved on the Mac (`005_ear.sql`). Call and response and tune by ear use the playback controls, then "Reveal notation" and a self-check. The Reading tab's Listen mode (below) can check call-and-response-style playing automatically; the Ear tab's own phrase check is still by self-report.
 
 ---
 
@@ -178,6 +190,8 @@ Your iOS app uses AudioKit's `PitchTap` (YIN algorithm) on the mic. Browsers can
 
 **Done when:** a steady sax tone reads within ±2 cents without octave jumps, all four features work, and it runs on the Mac, the work laptop and iPhone.
 
+**As built:** the Tuner tab (written note, concert note and Hz, ±50¢ gauge, casual ±12¢ / pro ±5¢, A4 438–445, sensitivity, Fletcher mode as an opt-in), **long tones** (0.3 s grace, 30 s bar, best per note saved), **intonation tendencies** (saved as sums; shown in the tuner and Progress), and **Reading that listens** (marks fumbles itself, saves the result, weights later exercises). Migration `006_tuner_reading.sql`. **Differences:** the McLeod detector is written in the repo (`src/tuner/detect.ts`) instead of the `pitchy` library, and an `AnalyserNode` replaces the AudioWorklet; `vercel.json` now allows the microphone for the site (`microphone=(self)`). **Verified** with synthetic tones across the whole horn (within 1–2 cents, no octave errors even when the 2nd harmonic is louder) and end to end in a browser with a fake microphone playing a recording. **Not yet verified on a real horn, the work laptop or iPhone.**
+
 ---
 
 ## Quick wins
@@ -188,6 +202,8 @@ Small, independent, any time:
 - **Fade the note names:** on the Mac, each note name under the chart gets fainter as your lookups for that note drop and your quiz accuracy rises. Online, a slider controls the fade by hand.
 - **Finish Reading:** save attempts and fumbles (Mac), weight new exercises toward weak notes, a silent-fingering mode, optional key signatures instead of written-out accidentals.
 
+**As built:** all three. Transpose is the "Key" menu on Tunes (−6 to +5 semitones, spelling and chords follow, notes outside your range greyed). Names fade on the Mac by quiz accuracy and lookups, and by a slider online. Reading saves results, weights toward fumbled and looked-up notes, has Silent follow-along and a Key signature option, and Listen.
+
 ---
 
 ## Stretch
@@ -195,3 +211,5 @@ Small, independent, any time:
 - **Phone app (PWA):** add sax.wo0.dev to the home screen and it opens full-screen like an app and **works offline**, including the unlocked sheet music. It needs a web app manifest, icons and a service worker (`vite-plugin-pwa`). Mic, sound and the tuner all work in an installed web app on iPhone, so there's no App Store and no Xcode. The earlier phases already make the layout phone-friendly; this step adds install and offline.
 - **Record and self-listen:** record a take in the browser, play it back next to an earlier one, and answer a few self-listen questions. Kept on the device; on the Mac, saved to disk.
 - **Practice export for the Claude tutor:** a markdown summary of the last week (tunes, lookups, quiz accuracy, intonation) in the format from `tutor-instructions.md`, ready to paste.
+
+**As built:** all three. **Phone app:** a manifest, icons and a small hand-written service worker (instead of `vite-plugin-pwa`) that downloads the whole build, sealed sheet music included, so the online copy works offline after the first visit and can be added to the home screen. **Record:** the Record tab: takes, the four self-listen questions with 1–5 ratings and a line each, compare two takes; saved on the Mac in `data/recordings/` (`007_recordings.sql`), kept in the tab online with a Download button. **Tutor export:** Progress → "For your tutor" (7, 14 or 30 days, copies to the clipboard); it includes quiz weak spots, lookups, reading fumbles, long tones, intonation outliers, ear results and the self-listen ratings.

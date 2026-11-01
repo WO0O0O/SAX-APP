@@ -12,16 +12,24 @@ A personal alto sax practice app: every fingering on the horn, scales from the c
 
 | Tab | What it does |
 |---|---|
-| **Scales** | Pick a key on the circle of fifths and one of 21 scales (major and modes, minors, pentatonics, blues, bebop, symmetric). Shows how it sounds, where it's used, songs that use it, the notes on the staff for one octave and the whole horn (low B♭ to high F♯), and a fingering for every note. |
+| **Scales** | Pick a key on the circle of fifths and one of 21 scales. How it sounds, where it's used, songs, the notes on the staff for one octave and the whole horn (low B♭ to high F♯), a fingering for every note, and **play it** up and down. |
 | **All notes** | Every written note from low B♭ to high F♯, with alternate fingerings. |
-| **Tunes** | My charts (Autumn Leaves, Smooth Operator, Naima, Happy Birthday, Is It a Crime, My One and Only Love) with chord symbols. Tap any note for its fingering, see every fingering the tune uses, open the original PDF. |
-| **Reading** | Endless sight-reading exercises in the chosen key and scale. Play first; tap a note only if you need its fingering. |
-| **Progress** | Tune milestones and which notes I look up most. *Mac only (see below).* |
+| **Tunes** | My charts (Autumn Leaves, Smooth Operator, Naima, Happy Birthday, Is It a Crime, My One and Only Love) as interactive sheet music. Tap a note for its fingering, a chord for its notes; **play** it at any tempo with swing, a loop, a count-in and a backing band; transpose it to any key. |
+| **Backing** | A band for practising improvising: 12-bar blues, minor blues, ii–V–I, ii–V–i, a turnaround and a So What vamp, in any key and tempo, with a speed trainer. |
+| **Reading** | Endless sight-reading exercises in the chosen key and scale. Play first; tap a note only if you need its fingering, or switch on **Listen** and let the microphone follow you. |
+| **Quiz** | Fingering flash-cards: see a note and press the keys, or see the keys and name the note. Weak notes come back. |
+| **Ear** | Intervals, chord quality, call and response, and tunes by ear. |
+| **Tuner** | A tuner (casual or pro), long-tone endurance and intonation tendencies, ported from my iOS Blue Note Tuner. |
+| **Record** | Record a take, listen back, rate it, compare with an earlier one. |
+| **Progress** | Tune milestones, lookups, quiz accuracy, reading, tuner stats, and a summary to paste to the Claude tutor. *Mac only (see below).* |
+| **Tools** | A drone and a metronome that keep running while I change tabs. |
+
+[docs/guide.md](docs/guide.md) explains every tab.
 
 ## Two ways to use it
 
 ### Option 1: just open the link
-https://sax.wo0.dev works in any browser with nothing to install. Everything works except saving progress. The Tunes tab asks for the sheet-music passphrase once per device.
+https://sax.wo0.dev works in any browser with nothing to install. Everything works except saving progress, including sound and the tuner. The Tunes tab asks for the sheet-music passphrase once per device. On a phone, Share → Add to Home Screen installs it like an app, and it works offline after the first visit.
 
 ### Option 2: set it up on your own Mac (to save progress and add music)
 Only needed if you want to **save progress** (tune milestones, fingering lookups) or **add or change sheet music** on the site.
@@ -44,8 +52,8 @@ Only needed if you want to **save progress** (tune milestones, fingering lookups
 
 | | Online link | Your Mac (`sax`) |
 |---|---|---|
-| Scales, All notes, Reading, Tunes | ✓ | ✓ |
-| Progress tab, saved milestones and lookups | ✗ | ✓ in `data/sax.db` |
+| Every tab except Progress, sound, the tuner, recording | ✓ | ✓ |
+| Progress tab and everything saved (milestones, lookups, quiz, reading, tuner stats, recordings) | ✗ | ✓ in `data/sax.db` and `data/recordings/` |
 | Needs | A browser | Node + the steps above |
 
 ### Publishing sheet music to the site
@@ -79,6 +87,6 @@ Environment: `SAX_PORT` (default 5757), `SAX_DATA_DIR` (default `./data`).
 - `server/`: the Mac-only API and SQLite database.
 - `vercel.json`: how the online copy is built and deployed on Vercel (every push to `main`).
 - `public/sealed/`: encrypted sheet music for the online copy.
-- `docs/`: start with [status.md](docs/status.md); [architecture.md](docs/architecture.md) explains how it all works; [sheet-music.md](docs/sheet-music.md) shows how a PDF becomes the interactive Tunes chart; [roadmap.md](docs/roadmap.md) has what's coming next.
+- `docs/`: start with [status.md](docs/status.md); [architecture.md](docs/architecture.md) explains how it all works; [sheet-music.md](docs/sheet-music.md) shows how a PDF becomes the interactive Tunes chart; [sound-and-tuner.md](docs/sound-and-tuner.md) explains sound, the band and the tuner; [guide.md](docs/guide.md) is how to use each tab; [roadmap.md](docs/roadmap.md) is the plan and what was built.
 
 Not in git: `data/` (my progress), `sheet-music/` (PDFs and charts), `node_modules/`, `dist/`.

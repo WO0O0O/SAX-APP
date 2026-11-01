@@ -16,6 +16,7 @@ export type ChartFile = {
   timeSig?: string; // default '4/4'
   tempo?: number; // bpm (quarter notes) to start playback at
   swing?: boolean; // eighths are swung
+  band?: 'swing' | 'ballad' | 'bossa' | 'straight8'; // the backing style to start with
   pdf?: string; // original PDF in sheet-music/
   bars: { notes: string; chords?: string[] }[];
 };

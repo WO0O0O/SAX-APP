@@ -42,6 +42,7 @@ export function useTunePlayback(chart: Chart | null) {
     player.stop();
     setBpmState(chart.tempo ?? 100);
     setSwing(chart.swing ? 'full' : 'off');
+    setBand(chart.band ?? 'off');
     setFrom(1);
     setTo(chart.bars.length);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,6 +80,7 @@ export function useTunePlayback(chart: Chart | null) {
         loop,
         countIn: countIn ? bpb : 0,
         beatsPerBar: bpb,
+        barBeats: bpb,
         voice,
         cursorEvents: playMelody ? swungCursor(piece.events, swing) : [],
         levels: silent ? { melody: 0, band: 0 } : { melody: 1, band: 0.75 },
@@ -125,6 +127,7 @@ export function useTunePlayback(chart: Chart | null) {
   return {
     playing: player.playing,
     cursor: player.cursor,
+    bar: player.bar,
     start,
     stop: player.stop,
     playNotes,

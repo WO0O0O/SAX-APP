@@ -31,14 +31,15 @@ The same React app runs in two places. **Almost everything happens in the browse
 | | Online copy | On the Mac (`sax`) |
 |---|---|---|
 | Who can open it | Anyone with the link (the sheet music needs the passphrase) | Only this Mac (the server listens on `127.0.0.1`) |
-| Scales, All notes, Reading | ✓ | ✓ |
+| Scales, All notes, Reading, Quiz, Ear, Tuner, Record, Tools, sound | ✓ | ✓ |
 | Tunes | ✓ after entering the passphrase once per device | ✓ |
-| Progress tab, saved milestones, lookup counts | ✗ hidden; nothing is saved | ✓ in `data/sax.db` |
+| Works offline, can be added to a phone's home screen | ✓ (service worker, [sound-and-tuner.md](sound-and-tuner.md) §7) | n/a |
+| Progress tab and everything saved: milestones, lookups, quiz, reading, long tones, intonation, ear training, recordings | ✗ hidden; nothing is saved | ✓ in `data/sax.db` and `data/recordings/` |
 | Updates | Automatically, about a minute after each push to `main` | Next time you run `sax` (it rebuilds if the code changed) |
 
 **How one codebase does both.** [src/mode.ts](../src/mode.ts) sets `HOSTED` from the page's address: on `127.0.0.1` / `localhost` it's the Mac version, anywhere else it's the online copy. So no build settings are needed on any host. [src/api.ts](../src/api.ts) checks `HOSTED` in each function:
 - the tune list comes from [shared/tunes.ts](../shared/tunes.ts) instead of the database;
-- lookups aren't sent;
+- results (lookups, quiz, ear, reading, tuner, recordings) aren't sent anywhere;
 - charts and PDFs are fetched encrypted and decrypted in the browser (§7.6);
 - the Progress tab and milestone editor are hidden.
 
@@ -68,12 +69,13 @@ All files in git are needed. Here's what each is for.
 | `package.json` | Dependencies and the npm scripts (`dev`, `build`, `start`, `test`, `typecheck`, `backup`). |
 | `package-lock.json` | Exact dependency versions, so `npm ci` installs the same thing every time. Generated; never edit by hand. It's 2,700 lines, which is why the repo looks bigger than it is. |
 | `tsconfig.json` | TypeScript settings for both browser and server code. |
-| `vite.config.ts` | The build tool config: React + Tailwind plugins, the dev proxy (`/api` → port 5757), and test settings. |
+| `vite.config.ts` | The build tool config: React + Tailwind plugins, the dev proxy (`/api` → port 5757), test settings, and a small plugin that lists every built file for the offline copy and stamps the service worker. |
 | `index.html` | The single HTML page. It contains just `<div id="root">` and loads `src/main.tsx`. Vite needs it as the entry point. |
 | `bin/sax` | The launcher described above. |
 | `scripts/backup.ts` | `npm run backup`: copies the database to `data/backups/`. |
 | `scripts/seal.ts` | `npm run seal`: encrypts `sheet-music/` into `public/sealed/` for the online copy. |
 | `public/sealed/` | The encrypted charts and PDFs (safe in a public repo) plus `manifest.json`. Vite copies `public/` into the build as-is. |
+| `public/sw.js`, `manifest.webmanifest`, `icons/` | The service worker (offline) and what a phone needs to add the app to the home screen. |
 | `vercel.json` | Build settings and security headers for the online copy on Vercel. |
 | `.gitignore` | Keeps `node_modules/`, `dist/`, `data/` and `sheet-music/` out of git. |
 | `README.md` | How to run it. |
@@ -93,7 +95,8 @@ All files in git are needed. Here's what each is for.
 | `index.ts` | Starts the web server: opens the DB, mounts the API at `/api`, serves `dist/`, binds to 127.0.0.1. |
 | `db.ts` | Opens SQLite and runs migrations. |
 | `migrations/*.sql` | The database schema, as a history of changes (see §4). |
-| `seed.ts` | Fills a brand-new database with your tune list. |
+| `seed.ts` | Adds any tune from `shared/tunes.ts` that isn't in the database yet (matched by title). |
+| `summary.ts` | Builds the markdown practice summary for the Claude tutor. |
 | `api.ts` | The JSON endpoints. |
 | `*.test.ts` | Tests for the database and the API. |
 
@@ -103,6 +106,7 @@ All files in git are needed. Here's what each is for.
 | `theory.ts` | Note spelling, transposition, MIDI numbers. The most "music theory" file in the repo. |
 | `seal.ts` | Encryption for the online copy's sheet music (used by the seal script and the browser). |
 | `tunes.ts` | The tune list: seeds the Mac's database and is the online copy's read-only list. |
+| `chords.ts` | Chord symbols → spelled chord tones, guide tones, which scale fits, moving a symbol to another key (§7.8). |
 | `student.ts` | Your comfortable range (C4–D♯6). Change it here when it grows. |
 
 ### `src/` (front end)
@@ -112,13 +116,15 @@ All files in git are needed. Here's what each is for.
 | `index.css` | Colour tokens, fonts, the `panel` / `caps` styles. |
 | `api.ts` | The browser's side of the API: `getTunes`, `updateTune`, `logLookup`, `loadChart`, `openPdf`. Switches behaviour in the online copy. |
 | `mode.ts`, `sealed.ts` | Online-copy detection; unlocking and decrypting sealed files. |
-| `screens/` | One file per tab: Scales, All notes, Tunes, Reading, Progress. |
-| `music/` | Scale library (`scales.ts`), building scales across the horn (`build.ts`), the sight-reading generator (`exercise.ts`), the tune chart format (`chart.ts`), the circle-of-fifths dial and scale picker. |
+| `screens/` | One file per tab: Scales, All notes, Tunes, Backing, Reading, Quiz, Ear, Tuner, Record, Progress. |
+| `music/` | Scale library (`scales.ts`), building scales across the horn (`build.ts`), the sight-reading generator (`exercise.ts`), the tune chart format (`chart.ts`), transposing a chart (`transpose.ts`), practice grooves in any key (`presets.ts`), key signatures (`keys.ts`), chord tones on a chart (`chordTones.ts`), quiz and ear-training logic (`quiz.ts`, `ear.ts`, `known.ts`), the circle-of-fifths dial and scale picker. |
+| `audio/` | Sound: pitch maths, chart → events, the look-ahead scheduler, the synthesised voices, the band, drone and metronome. See [sound-and-tuner.md](sound-and-tuner.md). |
+| `tuner/` | The microphone, McLeod pitch detection, smoothing, long tones, intonation log, Reading's Listen tracker. |
 | `fingering/` | Fingering data for every note (`fingerings.ts`), the key diagram, the fingering card. |
 | `notation/` | `Score.tsx` turns notes into sheet music with VexFlow. |
-| `tunes/` | The milestone / tempo / no-chart editor. |
+| `tunes/` | The milestone / tempo / no-chart editor, the playback bar and its hook, the chord panel. |
 | `scene/` | The animated background. |
-| `ui/NoteText.tsx` | Sets ♯/♭ in a font that has them (the serif heading font doesn't). |
+| `ui/` | `NoteText` sets ♯/♭ in a font that has them (the serif heading font doesn't); the Tools panel (drone and metronome); the scale play controls. |
 
 ### `docs/`
 | File | For |
@@ -126,7 +132,9 @@ All files in git are needed. Here's what each is for.
 | `status.md` | **Start here.** Where things stand, decisions, what's next. |
 | `architecture.md` | This file. |
 | `sheet-music.md` | How a PDF becomes the interactive chart on the Tunes tab, with diagrams. |
-| `roadmap.md` | Agreed future work, in build order, with a plan for each phase. |
+| `guide.md` | How to use each tab. |
+| `sound-and-tuner.md` | How sound, the band, ear training and the tuner work, with diagrams. |
+| `roadmap.md` | The plan for each phase, what was built and how it differed, and ideas for later. |
 | `overview.md` | Who it's for, goals, the 3-month test. |
 | `curriculum.md` | The teaching plan the Claude tutor follows. The app doesn't enforce it. |
 | `tutor-instructions.md` | Paste into the Claude tutor project. |
@@ -161,14 +169,24 @@ In development (`npm run dev`) two processes run instead. Vite serves `src/` wit
   | `001_init.sql` | The original schema, including the timed-session tables. |
   | `002_fingering_ladder.sql` | Reset the "unlocked notes" for the old reading ladder. |
   | `003_free_practice.sql` | Dropped everything the timed-session design needed and left the three tables below. |
+  | `004_quiz.sql` | `quiz_answers`: one row per fingering-quiz answer. |
+  | `005_ear.sql` | `ear_answers`: one row per ear-training answer. |
+  | `006_tuner_reading.sql` | `intonation`, `long_tone_best`, `reading_attempts`. |
+  | `007_recordings.sql` | `recordings`: metadata and self-listen answers for takes (the audio is a file). |
 
-  **Never edit a migration that has already run.** Your database has recorded it as done and won't run it again. To change the schema, add `004_something.sql`.
+  **Never edit a migration that has already run.** Your database has recorded it as done and won't run it again. To change the schema, add `008_something.sql`.
 
 ### What's in the database
 ```
 tunes            id, title, key_concert, form, status ('active' | 'queued' | 'done'), notes
 tune_progress    tune_id → tunes.id, stage (0-5), tempo, no_chart (0/1), updated_at
 notes_progress   pitch ('F#5'), midi (78), lookups, first_seen, last_seen
+quiz_answers     midi, mode ('note-keys' | 'keys-note'), correct, answered_at
+ear_answers      kind ('interval' | 'chord' | 'phrase' | 'tune'), item, correct, answered_at
+intonation       midi, samples, sum_cents        (average = sum / samples)
+long_tone_best   midi, seconds, achieved_at     (only the best hold is kept)
+reading_attempts midi, outcome ('clean' | 'lookup' | 'fumbled'), at
+recordings       created_at, label, file, mime, seconds, answers (JSON)
 schema_migrations  which migration files have run
 ```
 
@@ -182,6 +200,13 @@ schema_migrations  which migration files have run
 | `GET /api/notes` | All lookup counts | Progress |
 | `GET /api/charts/:slug` | Reads `sheet-music/<slug>.tune.json` | Tunes |
 | `GET /api/files/:name` | Serves a PDF from `sheet-music/` | "Original PDF" links |
+| `POST /api/quiz`, `GET /api/quiz/stats` | One quiz answer; accuracy per note | Quiz, Progress, fading names |
+| `POST /api/ear`, `GET /api/ear/stats` | One ear answer; stats per kind and item (decides what is introduced next) | Ear, Progress |
+| `POST /api/reading`, `GET /api/reading/stats` | How each note of an exercise went; fumbles per note | Reading (also weights new exercises), Progress |
+| `POST /api/intonation`, `GET /api/intonation` | Adds `{midi, n, sum}` totals; returns the average cents per note | Tuner, Progress |
+| `POST /api/longtone`, `GET /api/longtone` | Keeps the longest in-tune hold per note | Tuner, Progress |
+| `POST /api/recordings`, `GET /api/recordings`, `GET /api/recordings/:id/audio`, `DELETE /api/recordings/:id` | Takes: audio arrives as base64 inside JSON (so the JSON-only write rule still protects it) and is stored as a file; the file name comes from the row id, never from the request | Record |
+| `GET /api/export?days=7` | The markdown practice summary | Progress ("For your tutor") |
 
 Two details worth noticing:
 - **The lookup is an "upsert"** (insert or update in one statement), so a note's row is created on its first lookup:
@@ -202,12 +227,13 @@ Two details worth noticing:
 
 | What | Where | Lifetime |
 |---|---|---|
-| Tune milestones, best tempo, "played without a chart", fingering lookups per note | **SQLite**, `data/sax.db` | Permanent; survives restarts, rebuilds and git pulls. |
-| Last key + scale you picked; last tune you opened | **Browser localStorage** (`sax.picker.v1`, `sax.tune.v1`) | Convenience only. Clearing browser data just resets your picks. |
+| Tune milestones, best tempo, "played without a chart", fingering lookups, quiz answers, ear answers, reading results, long-tone bests, intonation totals, recording details | **SQLite**, `data/sax.db` | Permanent; survives restarts, rebuilds and git pulls. |
+| Recorded takes (audio) | **Files**, `data/recordings/<id>.webm` | Permanent; deleted with the take. |
+| Last key + scale, last tune, quiz and tuner settings, sound settings, tools settings | **Browser localStorage** (`sax.picker.v1`, `sax.tune.v1`, `sax.quiz.v1`, `sax.tuner.v1`, `sax.audio.v1`, `sax.tools.v1`, `sax.ear.v1`) | Convenience only. Clearing browser data just resets your picks. |
 | Tune charts and PDFs | **Files**, `sheet-music/` (and encrypted copies in `public/sealed/`) | Read-only for the app; created by transcription. |
 | Unlock key for the online copy | **Browser localStorage** on each device (`sax.key.v1`) | Until you clear site data; then enter the passphrase again. |
 
-**Not saved yet:** notes marked "fumbled", and the exercises you've played. Both reset when you leave the page.
+**Not saved:** the exercises themselves (only how each note went), and any audio in the online copy. The microphone signal for the tuner is analysed live and never stored or sent.
 
 ### Following one save from tap to disk
 Tap a note in Reading or Tunes:
@@ -229,7 +255,7 @@ Changing a milestone works the same way: [TuneProgress.tsx](../src/tunes/TunePro
 ## 6. The front end
 
 - **Screens without a router library.** [App.tsx](../src/App.tsx) keeps the current tab in state and in the URL hash (`#scales`, `#tunes`), so refreshing keeps your place.
-- **Lazy loading.** VexFlow, the notation library, is about 390 KB gzipped because it embeds its music fonts. Scales, Tunes and Reading load it with `React.lazy`, so All notes and Progress open without it.
+- **Lazy loading.** VexFlow, the notation library, is about 390 KB gzipped because it embeds its music fonts. Every screen except All notes and Progress loads with `React.lazy`, so those two open without it, and the Quiz, Ear, Tuner and Record code isn't downloaded until you open them.
 - **The scene stays mounted.** `BarScene` renders once behind everything. Each screen calls `onSceneDim(0.5)` to set how dark the overlay is.
 - **Styling** is Tailwind utility classes plus a few named styles in `index.css` (`panel`, `caps`) and the `paper` card in `notation/score.css`.
 
@@ -334,19 +360,40 @@ It stays cheap to run because animations only change `transform` and `opacity`, 
 
 ---
 
+### 7.8 Chord symbols ([shared/chords.ts](../shared/chords.ts))
+The charts write chords as text (`Am7`, `F#ø7`, `B7(♭9)`, `C#m9/B#`). `parseChord` reads the root, picks a base quality from an ordered list of patterns (longest and most specific first, so `m7b5` is tried before `m7` and `m`), then applies alterations (`♭9`, `♯5`…) and spells every tone with `spellDegree` so it is correct for the key: `F#ø7` is `F♯ A C E`, never `G♭ …`. Everything that follows is built on those tones: the chord panel, guide-tone moves, which scale fits, the colour-the-melody view, the band's bass and piano, and transposing a tune (which moves the roots in the symbols and keeps the rest of the text). A test parses every chord that occurs in the tunes.
+
+### 7.9 Sound, ear training and the tuner
+Covered in [sound-and-tuner.md](sound-and-tuner.md), with diagrams: chart → events → look-ahead scheduler → synthesised voices; the generated band; the McLeod pitch detector, smoothing, long tones, intonation and Listen. The idea worth knowing here: **the pitch detector, the scheduler and the band are all pure functions**, so they are tested with synthetic signals and a fake clock rather than by ear.
+
+### 7.10 Quiz and ear-training logic ([src/music/quiz.ts](../src/music/quiz.ts), [ear.ts](../src/music/ear.ts))
+Both are small pure modules with an injected random source:
+- **Quiz:** a fingering is right if the pressed keys *exactly* equal one of the note's fingerings (so alternates count and a missing octave key doesn't). A note's weight is higher when you have missed it or looked it up a lot; new notes are weighted above mastered ones. A missed note returns after three questions. Wrong options for "keys → note" are the nearest notes with their own fingerings.
+- **Ear:** items are listed in the order they are introduced. Three are in play to start, and one more joins for each item that has 6+ answers at 80% or better, which comes from the saved answers (Mac) or this visit (online).
+- **Fading note names** ([known.ts](../src/music/known.ts)): 3+ quiz answers at 85% and 2 or fewer lookups fades a name to 15%; 70% accuracy fades it to half.
+
 ## 8. Tests
 
-`npm test` runs about 50 tests in under a second:
+`npm test` runs about 195 tests in a couple of seconds:
 
 | File | Checks |
 |---|---|
 | `shared/theory.test.ts` | Transposition, spelling, octave edge cases, MIDI parsing |
-| `src/music/build.test.ts` | Scales across the horn stay in range; blues spelling |
-| `src/music/exercise.test.ts` | Every scale × 25 seeds: in range, in scale, 4 beats, ends on tonic |
+| `shared/chords.test.ts` | Every chord symbol in the tunes parses and spells correctly; guide tones and their moves; which scale fits; moving a symbol to another key |
+| `src/music/build.test.ts`, `exercise.test.ts` | Scales across the horn; every scale × 25 seeds is in range, in scale, 4 beats, ends on the tonic; weighted exercises favour weak notes |
 | `src/music/chart.test.ts` | Chart tokens; every bar of your charts fills its time signature |
+| `src/music/transpose.test.ts`, `keys.test.ts`, `chordTones.test.ts`, `presets.test.ts` | Transposing a chart (every midi exactly N away, rests untouched); key signatures for modes and minors; chord roles under melody notes; every practice groove in all 12 keys parses with sensible spellings |
+| `src/music/quiz.test.ts`, `ear.test.ts`, `known.test.ts` | Answer checking, weighting, wrong options; unlocking and question ranges; fading |
 | `src/fingering/fingerings.test.ts` | Every note B♭3–F♯6 has a fingering; spot checks against the chart |
-| `server/db.test.ts` | Migrations leave exactly the expected tables; seeding runs once |
-| `server/api.test.ts` | Tune updates and validation, lookup counting, the path-escape guard |
+| `src/audio/transport.test.ts` | Written → concert Hz; chart → events (ties merged, triplets, length); swing; the scheduler on a fake clock (count-in, loops, tempo change, a throwing event) |
+| `src/audio/band.test.ts`, `metronome.test.ts` | The walking bass and comping follow the chords and stay in range; drum patterns; click bars; tap tempo |
+| `src/tuner/detect.test.ts` | The pitch detector on synthetic tones across the whole horn (sine and harmonic-rich, ±10¢, noise, silence); smoothing and cents |
+| `src/tuner/tuner.test.ts` | Long-tone timer and its 0.3 s grace; the Listen tracker; the intonation log |
+| `server/db.test.ts` | Migrations leave exactly the expected tables; seeding adds missing tunes once |
+| `server/api.test.ts` | Every endpoint, validation, the path-escape guard, the Host and JSON-only guards, recordings written to a temp folder |
+| `server/summary.test.ts` | The tutor summary's content |
+
+Not covered by tests, and checked by running them in a real browser instead: the voices (rendered offline and measured), playback and the cursor, the tuner with a fake microphone playing a recorded tone, recording and saving, and the service worker reloading the app with the server switched off.
 
 `npm run typecheck` runs TypeScript over everything.
 
@@ -360,5 +407,7 @@ It stays cheap to run because animations only change `transform` and `opacity`, 
 | Add a tune to the list | Add a line to `shared/tunes.ts`. `sax` adds any tune missing from the database at startup (matched by title), so no migration is needed. |
 | Add or edit a scale | Add an entry to `SCALES` in `src/music/scales.ts` (degrees + sound / use / songs). It appears everywhere automatically. |
 | Widen your range | Change `shared/student.ts`. Grey "stretch" notes and the Reading generator follow it. |
-| Save something new | Add a migration (`004_….sql`), an endpoint in `server/api.ts` with a test, and a function in `src/api.ts`. |
+| Save something new | Add a migration (`008_….sql`), an endpoint in `server/api.ts` with a test, and a function in `src/api.ts`. |
+| Add a band style | Add it to `BandStyle` and `BAND_STYLES` in `src/audio/band.ts` and give it bass, comp and drum patterns; the test loop covers every style. |
+| Change how strict the tuner is | `TOLERANCE` in `src/tuner/analysis.ts` (casual ±12¢, pro ±5¢); the level gate is the Sensitivity slider. |
 | Work on the code | `npm run dev` for hot reload; `npm test` and `npm run typecheck` before committing. |

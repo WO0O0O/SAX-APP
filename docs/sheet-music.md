@@ -54,6 +54,9 @@ Each tune is one JSON file in `sheet-music/` (git-ignored, because these are oth
 | `keySig` | The key signature to draw, as a major key (`G` = one sharp, `F` = one flat). It also decides which accidentals need printing (§6). |
 | `writtenKey`, `concertKey`, `arranger` | Shown in the tune's header. |
 | `pdf` | Which file the "Original PDF" link opens. |
+| `timeSig` | Optional, default `"4/4"`; e.g. `"3/4"` or `"12/8"`. |
+| `tempo`, `swing` | Optional. The tempo (quarter-note bpm) playback starts at, and `true` if the eighths are swung. They only set the starting values of the playback bar. |
+| `chords` (per bar) | Optional chord symbols, `"Name"` or `"Name@beat"`. They make the chord panel, chord-tone colours and the backing band work for that tune; a tune without them still plays, just without a band. |
 | `bars` | One entry per bar, in order. A pickup bar is written as a full bar starting with rests. |
 
 ### The note tokens

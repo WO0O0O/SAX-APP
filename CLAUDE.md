@@ -1,11 +1,12 @@
 # SAX_APP
 
-Personal alto sax practice app (single user). Online copy at https://sax.wo0.dev (Vercel); progress saved only on the Mac. Read `docs/status.md` first, then `docs/architecture.md` for how the code works.
+Personal alto sax practice app (single user). Online copy at https://sax.wo0.dev (Vercel); progress saved only on the Mac. Read `docs/status.md` first, then `docs/architecture.md` for how the code works (and `docs/sound-and-tuner.md` for sound and the tuner, `docs/guide.md` for how each tab is used).
 
 ## Rules
 - All notation in the UI is **written alto pitch** (concert + major 6th). Concert only in data, labelled. Checks: concert C = written A, concert Bb = written G, concert G minor = written E minor.
 - Student's written range is C4 to D#6 (`shared/student.ts`). Never generate exercise notes outside it.
 - Saved data is Mac-only (localhost + SQLite). The online copy (Vercel; `HOSTED` in `src/mode.ts` = not localhost) must work with no server: check both modes when changing `src/api.ts` or screens. Sheet music is only ever published encrypted (`npm run seal`). Ask before adding anything that costs money.
-- Free practice areas, no timed sessions. Show changes to the student before building on them.
+- Free practice areas, no timed sessions (the long-tone timer measures one hold, not a session). Show changes to the student before building on them.
+- Sound is concert pitch (written − 9); the tuner converts back (+9). Microphone audio is analysed in the browser and never stored or sent. Use the Web Audio API in `src/audio/` and keep pitch detection, the scheduler and the band as pure, tested functions. Ask before adding a dependency.
 - New schema changes go in a new numbered migration; never edit one that has run.
 - Keep docs current: update `docs/status.md` at the end of every session, and edit the spec/curriculum when a decision changes them.

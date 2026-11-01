@@ -15,6 +15,7 @@ import type { Stats } from '../music/quiz.ts';
 import { keyChoices, transposeChart } from '../music/transpose.ts';
 import { Score } from '../notation/Score.tsx';
 import { ChordPanel } from '../tunes/ChordPanel.tsx';
+import { GuideLinePanel } from '../tunes/GuideLinePanel.tsx';
 import { PlaybackBar } from '../tunes/PlaybackBar.tsx';
 import { TuneProgress } from '../tunes/TuneProgress.tsx';
 import { useTunePlayback } from '../tunes/useTunePlayback.ts';
@@ -103,6 +104,7 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
     [loaded],
   );
   const hasChords = chordList.length > 0;
+  const chordsOnly = useMemo(() => chordList.map((c) => c.chord!), [chordList]);
   const chordPos = chordSel ? chordList.findIndex((c) => c.bar === chordSel.bar && c.index === chordSel.index) : -1;
   const tones = useMemo(() => (loaded && colourTones ? toneColors(loaded) : {}), [loaded, colourTones]);
   const colors = useMemo(() => ({ ...tones, ...looked }), [tones, looked]);
@@ -341,6 +343,8 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                   playing={pb.playing}
                 />
               )}
+
+              {hasChords && <GuideLinePanel chords={chordsOnly} onPlay={(notes) => pb.playNotes(notes, 'up')} playing={pb.playing} />}
 
               <section>
                 <h2 className="caps mb-3 text-smoke-dim">Every note in this tune · {uniqueNotes.length} fingerings</h2>

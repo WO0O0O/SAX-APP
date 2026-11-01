@@ -13,6 +13,8 @@ export type PlayOptions = Omit<TransportOptions, 'events'> & {
   /** 1 = full. */
   levels?: { melody: number; band: number };
   onCursor?: (item: number | undefined, songBeat: number) => void;
+  /** Called every frame with the song beat (negative during the count-in). */
+  onBeat?: (songBeat: number) => void;
   onEnd?: () => void;
   onLoop?: (completed: number) => void;
 };
@@ -63,6 +65,7 @@ export function createPlayer() {
         const e = cursorEvents[i];
         if (e && beat < e.start + e.dur) item = e.item;
       }
+      o.onBeat?.(t.position() >= 0 ? beat : t.position());
       if (item !== last) {
         last = item;
         o.onCursor?.(item, beat);
