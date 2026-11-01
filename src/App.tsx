@@ -5,6 +5,7 @@ import { ProgressScreen } from './screens/ProgressScreen.tsx';
 import { HOSTED } from './mode.ts';
 import { setVolume } from './audio/engine.ts';
 import { setSettings, useAudioSettings } from './audio/settings.ts';
+import { ToolsButton, ToolsPanel } from './ui/ToolsPanel.tsx';
 
 // VexFlow is large; only load it on the screens that draw notation.
 const ScalesScreen = lazy(() => import('./screens/ScalesScreen.tsx'));
@@ -81,6 +82,7 @@ export function App() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
           <SoundControls />
+          <ToolsButton />
           <nav className="flex flex-wrap gap-1 rounded-full bg-ink/70 p-1" aria-label="Screens">
             {SCREENS.map((s) => (
               <button
@@ -110,6 +112,7 @@ export function App() {
           </Suspense>
         </main>
       </div>
+      <ToolsPanel />
     </>
   );
 }
