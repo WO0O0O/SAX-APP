@@ -24,6 +24,22 @@
       "sha256": "ae87d79cc2b654949db021576e377bd7c57c83118d6c885701752192b8bf873a",
       "bytes": 612
     },
+    "is-it-a-crime.pdf": {
+      "sha256": "b0d1d9b91379feba8271e9c76ebef8206e8548d36af39643c1cd948fd5236b0f",
+      "bytes": 286807
+    },
+    "is-it-a-crime.tune.json": {
+      "sha256": "2801d3b960bcd13da1eff83c71a432119fec5bd67f6df219b395a78b09097f5a",
+      "bytes": 2644
+    },
+    "my-one-and-only-love.pdf": {
+      "sha256": "be3c85765fa407d97c0540ed05f6e47d356600f2cfa9d7a711e4b27b129d2c16",
+      "bytes": 181031
+    },
+    "my-one-and-only-love.tune.json": {
+      "sha256": "dea021460e4de5d5243b986d0630454036e846445b3641243c9d722ad63145ec",
+      "bytes": 4054
+    },
     "naima.pdf": {
       "sha256": "e7e051b5e6e284d1407c5633db8af19fe6d27c778b9a519393434f112570ff8c",
       "bytes": 167278
