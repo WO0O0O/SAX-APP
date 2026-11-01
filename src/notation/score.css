@@ -15,6 +15,20 @@
 .score .note-hit.is-selected {
   fill: rgb(154 84 16 / 0.16);
 }
+.score .note-hit.is-cursor {
+  fill: rgb(224 134 58 / 0.34);
+  stroke: rgb(154 84 16 / 0.7);
+  stroke-width: 1.5px;
+}
+.score .chord-hit {
+  pointer-events: all;
+  fill: transparent;
+  stroke: none;
+  cursor: pointer;
+}
+.score .chord-hit:hover {
+  fill: rgb(154 84 16 / 0.12);
+}
 .score .note-label {
   font: 600 13px var(--font-sans);
   fill: #5a4a3e;
@@ -35,4 +49,14 @@
 .score .chord {
   font: 600 15px var(--font-sans);
   fill: var(--color-paper-ink);
+}
+
+.score .chord.is-tappable {
+  text-decoration: underline;
+  text-decoration-color: rgb(154 84 16 / 0.35);
+  text-underline-offset: 3px;
+}
+.score .chord.is-active {
+  fill: var(--color-lookup);
+  text-decoration: underline;
 }

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BarScene } from './scene/BarScene.tsx';
 import { NotesScreen } from './screens/NotesScreen.tsx';
 import { ProgressScreen } from './screens/ProgressScreen.tsx';
@@ -27,6 +27,15 @@ export function App() {
     () => SCREENS.find((s) => `#${s.id}` === location.hash)?.id ?? 'scales',
   );
   const [dim, setDim] = useState(0.7);
+  // Links elsewhere in the app (e.g. "open in Scales") navigate by changing the hash.
+  useEffect(() => {
+    const onHash = () => {
+      const id = SCREENS.find((s) => `#${s.id}` === location.hash)?.id;
+      if (id) setScreenState(id);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
   const setScreen = (id: ScreenId) => {
     history.replaceState(null, '', `#${id}`);
     setScreenState(id);

@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { parseChord } from '../../shared/chords.ts';
 import { noteName } from '../../shared/theory.ts';
 import { getTunes, loadChart, logLookup, MILESTONES, openPdf, slugOf, type Tune } from '../api.ts';
 import { FingeringCard } from '../fingering/FingeringCard.tsx';
 import { FingeringDiagram } from '../fingering/FingeringDiagram.tsx';
 import { FINGERINGS, describe } from '../fingering/fingerings.ts';
 import { parseChart, type Chart, type ChartFile } from '../music/chart.ts';
+import { ROLE_COLORS, ROLE_NAMES, toneColors } from '../music/chordTones.ts';
 import { Score } from '../notation/Score.tsx';
+import { ChordPanel } from '../tunes/ChordPanel.tsx';
 import { TuneProgress } from '../tunes/TuneProgress.tsx';
 import { NoteText } from '../ui/NoteText.tsx';
 import { UnlockPanel } from '../ui/UnlockPanel.tsx';
@@ -32,6 +35,8 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
   const [labels, setLabels] = useState(true);
   const [selected, setSelected] = useState<number | undefined>();
   const [looked, setLooked] = useState<Record<number, string>>({});
+  const [chordSel, setChordSel] = useState<{ bar: number; index: number } | undefined>();
+  const [colourTones, setColourTones] = useState(false);
 
   useEffect(() => onSceneDim(0.5), [onSceneDim]);
   useEffect(() => {
@@ -50,6 +55,7 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
     setChart(null);
     setSelected(undefined);
     setLooked({});
+    setChordSel(undefined);
     loadChart<ChartFile>(slugOf(tune.title))
       .then((file) => setChart(parseChart(file)))
       .catch((e) => setChart(e instanceof LockedError ? 'locked' : 'missing'));
@@ -74,6 +80,18 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
     },
     [items, looked],
   );
+
+  const chordList = useMemo(
+    () =>
+      loaded
+        ? loaded.chords.flatMap((cs, bar) => cs.map((c, index) => ({ bar, index, chord: parseChord(c.name) }))).filter((c) => c.chord)
+        : [],
+    [loaded],
+  );
+  const hasChords = chordList.length > 0;
+  const chordPos = chordSel ? chordList.findIndex((c) => c.bar === chordSel.bar && c.index === chordSel.index) : -1;
+  const tones = useMemo(() => (loaded && colourTones ? toneColors(loaded) : {}), [loaded, colourTones]);
+  const colors = useMemo(() => ({ ...tones, ...looked }), [tones, looked]);
 
   const note = selected !== undefined ? items[selected]?.note : undefined;
   const fingering = note ? FINGERINGS[note.midi]?.[0] : undefined;
@@ -153,11 +171,30 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                 <article className="paper px-5 pt-4 pb-2">
                   <header className="flex flex-wrap items-center justify-between gap-2">
                     <p className="caps text-lookup">Chart · tap a note for its fingering</p>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                    {hasChords && (
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={colourTones} onChange={(e) => setColourTones(e.target.checked)} className="size-4 accent-lookup" />
+                        Colour chord tones
+                      </label>
+                    )}
                     <label className="flex items-center gap-2 text-sm">
                       <input type="checkbox" checked={labels} onChange={(e) => setLabels(e.target.checked)} className="size-4 accent-lookup" />
                       Note names
                     </label>
+                    </div>
                   </header>
+                  {colourTones && (
+                    <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs" aria-label="Colour key">
+                      {(['root', 'third', 'fifth', 'seventh', 'extension'] as const).map((r) => (
+                        <li key={r} className="flex items-center gap-1.5">
+                          <span className="inline-block size-2.5 rounded-full" style={{ background: ROLE_COLORS[r] }} />
+                          {ROLE_NAMES[r]}
+                        </li>
+                      ))}
+                      <li className="text-paper-ink/60">black = not a chord tone</li>
+                    </ul>
+                  )}
                   <Score
                     bars={loaded.bars}
                     chords={loaded.chords}
@@ -165,9 +202,11 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                     timeSig={loaded.timeSig ?? "4/4"}
                     keySig={loaded.keySig}
                     labels={labels}
-                    colors={looked}
+                    colors={colors}
                     selected={selected}
                     onTap={onTap}
+                    onChordTap={hasChords ? (bar, index) => setChordSel({ bar, index }) : undefined}
+                    activeChord={chordSel}
                     width={980}
                   />
                 </article>
@@ -197,6 +236,15 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                   )}
                 </aside>
               </div>
+
+              {chordPos >= 0 && (
+                <ChordPanel
+                  key={`${chordSel!.bar}-${chordSel!.index}`}
+                  chord={chordList[chordPos].chord!}
+                  next={chordList[chordPos + 1]?.chord ?? null}
+                  onClose={() => setChordSel(undefined)}
+                />
+              )}
 
               <section>
                 <h2 className="caps mb-3 text-smoke-dim">Every note in this tune · {uniqueNotes.length} fingerings</h2>

@@ -30,6 +30,12 @@ type Props = {
   faded?: (note: Note) => boolean;
   selected?: number;
   onTap?: (index: number) => void;
+  /** Tapping a chord symbol: its bar and its position among that bar's chords. */
+  onChordTap?: (bar: number, index: number) => void;
+  /** The chord whose symbol is highlighted. */
+  activeChord?: { bar: number; index: number };
+  /** Playback position: the item index to highlight (updated without redrawing the score). */
+  cursor?: number;
   /** Width of a full line in score units; the SVG scales to its container. */
   width?: number;
 };
@@ -62,7 +68,7 @@ function keyAccidentals(keySig?: string): number[] {
 let fontsReady: Promise<unknown> | null = null;
 
 export function Score(props: Props) {
-  const { bars, barsPerLine, timeSig, keySig, chords, labels, colors = {}, faded, selected, onTap, width = 900 } = props;
+  const { bars, barsPerLine, timeSig, keySig, chords, labels, colors = {}, faded, selected, onTap, onChordTap, activeChord, cursor, width = 900 } = props;
   const host = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
 
@@ -173,7 +179,7 @@ export function Score(props: Props) {
       if (chords?.[b]) {
         let lastEnd = -Infinity; // right edge of the previous chord; a chord that would overlap it is raised
         let raised = false;
-        for (const chord of chords[b]) {
+        chords[b].forEach((chord, ci) => {
           let beat = 0;
           const target = items.find((e) => {
             const hit = beat >= chord.beat - 0.01;
@@ -183,8 +189,20 @@ export function Score(props: Props) {
           const cx = target ? target.sn.getAbsoluteX() : stave.getNoteStartX();
           raised = cx - 4 < lastEnd && !raised;
           lastEnd = cx - 4 + chord.name.length * 9;
-          addText(cx - 4, y + 4 - (raised ? 13 : 0), chord.name, 'chord');
-        }
+          const active = activeChord?.bar === b && activeChord.index === ci;
+          addText(cx - 4, y + 4 - (raised ? 13 : 0), chord.name, active ? 'chord is-active' : onChordTap ? 'chord is-tappable' : 'chord');
+          if (onChordTap) {
+            const hit = document.createElementNS(SVG_NS, 'rect');
+            hit.setAttribute('x', String(cx - 8));
+            hit.setAttribute('y', String(y + 4 - (raised ? 13 : 0) - 16));
+            hit.setAttribute('width', String(chord.name.length * 9 + 8));
+            hit.setAttribute('height', '22');
+            hit.setAttribute('rx', '5');
+            hit.setAttribute('class', 'chord-hit');
+            hit.addEventListener('click', () => onChordTap(b, ci));
+            hits.push(hit);
+          }
+        });
       }
 
       const top = stave.getYForLine(0) - 46;
@@ -205,6 +223,7 @@ export function Score(props: Props) {
           hit.setAttribute('height', String(labelY + 8 - top));
           hit.setAttribute('rx', '6');
           hit.setAttribute('class', i === selected ? 'note-hit is-selected' : 'note-hit');
+          hit.setAttribute('data-i', String(i));
           hit.addEventListener('click', () => onTap(i));
           hits.push(hit);
         }
@@ -230,7 +249,20 @@ export function Score(props: Props) {
     svg.removeAttribute('height');
     svg.style.width = '100%';
     svg.style.height = 'auto';
-  }, [bars, barsPerLine, timeSig, keySig, chords, labels, colors, faded, selected, onTap, width, ready]);
+  }, [bars, barsPerLine, timeSig, keySig, chords, labels, colors, faded, selected, onTap, onChordTap, activeChord?.bar, activeChord?.index, width, ready]);
+
+  // The playback cursor moves without redrawing the whole score.
+  useEffect(() => {
+    const el = host.current;
+    if (!el) return;
+    el.querySelectorAll('.note-hit.is-cursor').forEach((n) => n.classList.remove('is-cursor'));
+    if (cursor === undefined) return;
+    const hit = el.querySelector(`.note-hit[data-i="${cursor}"]`);
+    if (!hit) return;
+    hit.classList.add('is-cursor');
+    const r = hit.getBoundingClientRect();
+    if (r.top < 80 || r.bottom > window.innerHeight - 40) hit.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [cursor, bars, ready]);
 
   return <div ref={host} className="score" />;
 }
