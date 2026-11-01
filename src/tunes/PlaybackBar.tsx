@@ -1,3 +1,4 @@
+import { BAND_STYLES, type BandStyle } from '../audio/band.ts';
 import { setSettings, useAudioSettings } from '../audio/settings.ts';
 import type { Swing } from '../audio/tunePlan.ts';
 import type { Playback } from './useTunePlayback.ts';
@@ -5,7 +6,7 @@ import type { Playback } from './useTunePlayback.ts';
 const field = 'rounded-md border border-paper-ink/25 bg-transparent px-2 py-1 text-sm';
 
 /** Play controls shown on the paper card above a chart. Small controls on purpose. */
-export function PlaybackBar({ pb, canPlayFrom, onPlayFrom, band }: { pb: Playback; canPlayFrom: boolean; onPlayFrom: () => void; band?: React.ReactNode }) {
+export function PlaybackBar({ pb, canPlayFrom, onPlayFrom }: { pb: Playback; canPlayFrom: boolean; onPlayFrom: () => void }) {
   const { voice } = useAudioSettings();
   return (
     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 border-y border-paper-ink/10 py-2 text-sm">
@@ -63,7 +64,40 @@ export function PlaybackBar({ pb, canPlayFrom, onPlayFrom, band }: { pb: Playbac
           </>
         )}
       </span>
-      {band}
+      {pb.hasChords && (
+        <span className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-paper-ink/5 px-2 py-1">
+          <label className="flex items-center gap-2">
+            <span className="text-paper-ink/70">Band</span>
+            <select value={pb.band} onChange={(e) => pb.setBand(e.target.value as BandStyle | 'off')} className={field}>
+              <option value="off">None</option>
+              {BAND_STYLES.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {pb.band !== 'off' && (
+            <>
+              <label className="flex items-center gap-1.5">
+                <input type="checkbox" checked={pb.melody} onChange={(e) => pb.setMelody(e.target.checked)} className="size-4 accent-lookup" />
+                Melody
+              </label>
+              <button type="button" onClick={pb.reroll} className="text-lookup hover:underline" title="A different walking bass and comping">
+                New take
+              </button>
+            </>
+          )}
+        </span>
+      )}
+      {pb.loop && (
+        <label className="flex items-center gap-1.5" title="Adds 4 bpm after every few loops">
+          <input type="checkbox" checked={pb.trainer} onChange={(e) => pb.setTrainer(e.target.checked)} className="size-4 accent-lookup" />
+          Speed up +4 every
+          <input type="number" min={1} max={16} value={pb.every} onChange={(e) => pb.setEvery(Math.max(1, Number(e.target.value) || 1))} className={`${field} w-12`} aria-label="Loops between speed-ups" />
+          loops
+        </label>
+      )}
     </div>
   );
 }

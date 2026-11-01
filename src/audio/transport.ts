@@ -41,6 +41,8 @@ export class Transport {
   playing = false;
   /** Called when a non-looping piece has finished sounding. */
   onEnd?: () => void;
+  /** Called each time a loop comes round, with the number of loops completed so far. */
+  onLoop?: (completed: number) => void;
 
   private clock: Clock;
   constructor(clock: Clock) {
@@ -121,6 +123,7 @@ export class Transport {
         }
         this.iter++;
         this.index = 0;
+        this.onLoop?.(this.iter);
         if (this.events.length === 0) return;
       }
       const e = this.events[this.index];

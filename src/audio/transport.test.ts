@@ -164,3 +164,14 @@ describe('tunePlan', () => {
     expect(melodyEvents(eights.events, 'off').map((e) => e.start)).toEqual([0, 0.5, 1, 1.5, 2]);
   });
 });
+
+describe('Transport loop callback', () => {
+  it('reports each completed loop', () => {
+    const { t, advance } = rig();
+    const loops: number[] = [];
+    t.onLoop = (n) => loops.push(n);
+    t.start({ events: [ev(0), ev(1)], bpm: 240, range: [0, 2], loop: true, countIn: 0, beatsPerBar: 4 });
+    advance(2);
+    expect(loops.slice(0, 3)).toEqual([1, 2, 3]);
+  });
+});

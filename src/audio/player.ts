@@ -14,6 +14,7 @@ export type PlayOptions = Omit<TransportOptions, 'events'> & {
   levels?: { melody: number; band: number };
   onCursor?: (item: number | undefined, songBeat: number) => void;
   onEnd?: () => void;
+  onLoop?: (completed: number) => void;
 };
 
 export function createPlayer() {
@@ -47,6 +48,7 @@ export function createPlayer() {
       o.onCursor?.(undefined, 0);
       o.onEnd?.();
     };
+    t.onLoop = o.onLoop;
     t.start(o);
     timer = setInterval(() => t.tick(), 25);
 

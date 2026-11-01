@@ -1,16 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { parseChord } from '../../shared/chords.ts';
 import type { Note } from '../../shared/theory.ts';
+import { bandEvents, chordSegments, type BandStyle } from '../audio/band.ts';
 import { pieceFromBars, pieceFromNotes } from '../audio/events.ts';
 import { usePlayer } from '../audio/usePlayer.ts';
 import { useAudioSettings } from '../audio/settings.ts';
-import { barRange, beatsPerBar, melodyEvents, swungCursor, type Swing } from '../audio/tunePlan.ts';
+import { barRange, beatsPerBar, melodyEvents, SWING_RATIO, swungCursor, type Swing } from '../audio/tunePlan.ts';
 import type { SchedEvent } from '../audio/transport.ts';
 import type { Chart } from '../music/chart.ts';
 
 export type Playback = ReturnType<typeof useTunePlayback>;
 
 /** Everything about playing a chart: tempo, swing, loop, count-in, and the cursor. */
-export function useTunePlayback(chart: Chart | null, extra?: (range: [number, number], bpb: number) => SchedEvent[]) {
+export function useTunePlayback(chart: Chart | null) {
   const { voice } = useAudioSettings();
   const player = usePlayer();
   const [bpm, setBpmState] = useState(100);
@@ -21,8 +23,16 @@ export function useTunePlayback(chart: Chart | null, extra?: (range: [number, nu
   const [loop, setLoop] = useState(false);
   const [from, setFrom] = useState(1);
   const [to, setTo] = useState(1);
+  const [band, setBand] = useState<BandStyle | 'off'>('off');
+  const [seed, setSeed] = useState(1);
+  const [trainer, setTrainer] = useState(false);
+  const [every, setEvery] = useState(2);
+  const bpmRef = useRef(bpm);
+  bpmRef.current = bpm;
+  const trainerRef = useRef({ trainer, every });
+  trainerRef.current = { trainer, every };
 
-  const piece = useMemo(() => (chart ? pieceFromBars(chart.bars) : null), [chart]);
+  const piece = useMemo(() => (chart ? pieceFromBars(chart.bars, beatsPerBar(chart.timeSig)) : null), [chart]);
   const bars = chart?.bars.length ?? 0;
 
   // A new tune brings its own tempo and feel.
@@ -55,7 +65,11 @@ export function useTunePlayback(chart: Chart | null, extra?: (range: [number, nu
       const events: SchedEvent[] = [];
       if (melody) events.push(...melodyEvents(piece.events, swing));
       if (click) for (let b = Math.ceil(range[0]); b < range[1]; b++) events.push({ start: b, dur: 1, kind: 'click', accent: b % bpb === 0 });
-      if (extra) events.push(...extra(range, bpb));
+      if (band !== 'off' && chart.chords.some((c) => c.length)) {
+        const segments = chordSegments(chart.chords, parseChord, piece.barStarts, piece.totalBeats);
+        const feel = band === 'swing' || band === 'ballad' ? SWING_RATIO[swing === 'off' && band === 'swing' ? 'full' : swing] : 0.5;
+        events.push(...bandEvents({ segments, range, beatsPerBar: bpb, style: band, swing: feel, seed }));
+      }
       player.play({
         events,
         bpm,
@@ -66,9 +80,14 @@ export function useTunePlayback(chart: Chart | null, extra?: (range: [number, nu
         voice,
         cursorEvents: melody ? swungCursor(piece.events, swing) : [],
         levels: { melody: 1, band: 0.75 },
+        // Speed trainer: every few loops, a little faster.
+        onLoop: (n) => {
+          const t = trainerRef.current;
+          if (t.trainer && n % t.every === 0) setBpm(bpmRef.current + 4);
+        },
       });
     },
-    [chart, piece, loop, from, to, melody, swing, click, bpm, countIn, voice, player, extra],
+    [chart, piece, loop, from, to, melody, swing, click, bpm, countIn, voice, player, band, seed, setBpm],
   );
 
   /** Plays a handful of notes (a scale, an arpeggio or a chord), not the chart. */
@@ -116,5 +135,10 @@ export function useTunePlayback(chart: Chart | null, extra?: (range: [number, nu
     loop, setLoop,
     from, setFrom,
     to, setTo,
+    band, setBand,
+    reroll: () => setSeed((x) => x + 1),
+    trainer, setTrainer,
+    every, setEvery,
+    hasChords: Boolean(chart?.chords.some((c) => c.length)),
   };
 }

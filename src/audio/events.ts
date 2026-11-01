@@ -16,7 +16,7 @@ export type NoteEvent = {
 export type Piece = { events: NoteEvent[]; totalBeats: number; barStarts: number[]; itemStarts: number[] };
 
 /** Chart bars -> events. Tied notes of the same pitch become one held note; rests are gaps. */
-export function pieceFromBars(bars: ScoreItem[][]): Piece {
+export function pieceFromBars(bars: ScoreItem[][], beatsPerBar = 4): Piece {
   const events: NoteEvent[] = [];
   const barStarts: number[] = [];
   const itemStarts: number[] = [];
@@ -26,7 +26,8 @@ export function pieceFromBars(bars: ScoreItem[][]): Piece {
   bars.forEach((bar, b) => {
     barStarts.push(t);
     for (const it of bar) {
-      const len = beatsOf(it);
+      // A bar holding one whole rest is a full bar of rest in any time signature (12/8 is 6 beats).
+      const len = bar.length === 1 && !it.note && it.duration === 'w' ? beatsPerBar : beatsOf(it);
       itemStarts.push(t);
       if (it.note) {
         if (open && open.midi === it.note.midi) {
