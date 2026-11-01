@@ -6,6 +6,7 @@ import { LockedError, openSealed } from './sealed.ts';
 
 export type Tune = { id: number; title: string; key_concert: string | null; status: string; stage: number; tempo: number | null; no_chart: number };
 export type QuizStat = { midi: number; answered: number; correct: number; last_at: string };
+export type EarStat = { kind: string; item: string; answered: number; correct: number };
 export type NoteRow = { pitch: string; midi: number; lookups: number; last_seen: string | null };
 
 export async function getJson<T>(path: string): Promise<T> {
@@ -37,6 +38,12 @@ export const logQuiz = (midi: number, mode: 'note-keys' | 'keys-note', correct: 
 /** Saved quiz history per note (the Mac only; empty online). */
 export const getQuizStats = (): Promise<QuizStat[]> => (HOSTED ? Promise.resolve([]) : getJson<QuizStat[]>('/api/quiz/stats').catch(() => []));
 export const getNotes = (): Promise<NoteRow[]> => (HOSTED ? Promise.resolve([]) : getJson<NoteRow[]>('/api/notes').catch(() => []));
+
+/** Fire-and-forget: one ear-training answer. */
+export const logEar = (kind: 'interval' | 'chord' | 'phrase' | 'tune', item: string, correct: boolean) => {
+  if (!HOSTED) send('POST', '/api/ear', { kind, item, correct }).catch(() => {});
+};
+export const getEarStats = (): Promise<EarStat[]> => (HOSTED ? Promise.resolve([]) : getJson<EarStat[]>('/api/ear/stats').catch(() => []));
 
 /** A transcribed chart, sheet-music/<slug>.tune.json. */
 export async function loadChart<T>(slug: string): Promise<T> {

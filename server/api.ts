@@ -112,5 +112,22 @@ export function api(db: DatabaseSync): Hono {
     ),
   );
 
+  // Ear training: one row per answer; stats per kind and item decide what gets introduced next.
+  app.post('/ear', async (c) => {
+    const { kind, item, correct } = await c.req.json<{ kind: string; item: string; correct: boolean }>();
+    if (!['interval', 'chord', 'phrase', 'tune'].includes(kind)) return c.json({ error: 'bad kind' }, 400);
+    if (typeof item !== 'string' || item.length === 0 || item.length > 60) return c.json({ error: 'bad item' }, 400);
+    db.prepare('INSERT INTO ear_answers (kind, item, correct, answered_at) VALUES (?, ?, ?, ?)').run(kind, item, correct ? 1 : 0, new Date().toISOString());
+    return c.json({ ok: true });
+  });
+
+  app.get('/ear/stats', (c) =>
+    c.json(
+      db
+        .prepare('SELECT kind, item, count(*) AS answered, sum(correct) AS correct FROM ear_answers GROUP BY kind, item ORDER BY kind, item')
+        .all(),
+    ),
+  );
+
   return app;
 }

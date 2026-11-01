@@ -40,6 +40,17 @@ describe('api', () => {
     expect((await app.request('/quiz', json('POST', { midi: 67, mode: 'nope', correct: true }))).status).toBe(400);
   });
 
+  it('stores ear-training answers and groups them by kind and item', async () => {
+    const { app } = setup();
+    await app.request('/ear', json('POST', { kind: 'interval', item: 'P5', correct: true }));
+    await app.request('/ear', json('POST', { kind: 'interval', item: 'P5', correct: false }));
+    await app.request('/ear', json('POST', { kind: 'chord', item: 'min7', correct: true }));
+    const rows = (await (await app.request('/ear/stats', local)).json()) as { kind: string; item: string; answered: number; correct: number }[];
+    expect(rows.map((r) => [r.kind, r.item, r.answered, r.correct])).toEqual([['chord', 'min7', 1, 1], ['interval', 'P5', 2, 1]]);
+    expect((await app.request('/ear', json('POST', { kind: 'nope', item: 'x', correct: true }))).status).toBe(400);
+    expect((await app.request('/ear', json('POST', { kind: 'chord', item: '', correct: true }))).status).toBe(400);
+  });
+
   it('rejects chart slugs that try to leave the folder', async () => {
     const { app } = setup();
     expect((await app.request('/charts/..%2Fpackage', local)).status).toBe(404);
