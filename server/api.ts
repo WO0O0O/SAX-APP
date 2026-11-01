@@ -1,15 +1,15 @@
 import { Hono } from 'hono';
 import type { DatabaseSync } from 'node:sqlite';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fromMidi } from '../shared/theory.ts';
-import { transaction } from './db.ts';
+import { DATA_DIR, transaction } from './db.ts';
 import { buildSummary } from './summary.ts';
 
 // Local-only tune charts (git-ignored), see src/music/chart.ts.
 const CHARTS_DIR = process.env.SAX_CHARTS_DIR ?? join(import.meta.dirname, '..', 'sheet-music');
 
-export function api(db: DatabaseSync): Hono {
+export function api(db: DatabaseSync, dataDir: string = DATA_DIR): Hono {
   const app = new Hono();
 
   // The server only listens on 127.0.0.1, but a web page you visit could still try to reach it:
@@ -196,6 +196,52 @@ export function api(db: DatabaseSync): Hono {
   app.get('/export', (c) => {
     const days = Math.min(90, Math.max(1, Number(c.req.query('days')) || 7));
     return c.text(buildSummary(db, days), 200, { 'content-type': 'text/markdown; charset=utf-8' });
+  });
+
+  // Recorded takes: the audio arrives base64 inside JSON (so the JSON-only write rule still protects it) and is stored as a file.
+  const EXT: Record<string, string> = { 'audio/webm': 'webm', 'audio/mp4': 'm4a', 'audio/ogg': 'ogg' };
+  const RECORDINGS = join(dataDir, 'recordings');
+  const MAX_BYTES = 25 * 1024 * 1024;
+
+  app.post('/recordings', async (c) => {
+    const body = await c.req.json<{ label: string; mime: string; data: string; seconds: number; answers?: unknown }>();
+    const mime = String(body.mime ?? '').split(';')[0];
+    if (!EXT[mime]) return c.json({ error: 'unsupported audio type' }, 400);
+    if (typeof body.label !== 'string' || body.label.length > 120) return c.json({ error: 'bad label' }, 400);
+    if (!Number.isFinite(body.seconds) || body.seconds <= 0 || body.seconds > 3600) return c.json({ error: 'bad length' }, 400);
+    if (typeof body.data !== 'string' || body.data.length > (MAX_BYTES * 4) / 3 || !/^[A-Za-z0-9+/=]+$/.test(body.data)) return c.json({ error: 'bad audio' }, 400);
+    const answers = JSON.stringify(body.answers && typeof body.answers === 'object' ? body.answers : {});
+    if (answers.length > 4000) return c.json({ error: 'answers too long' }, 400);
+    const now = new Date().toISOString();
+    const { lastInsertRowid } = db.prepare('INSERT INTO recordings (created_at, label, file, mime, seconds, answers) VALUES (?, ?, ?, ?, ?, ?)').run(now, body.label, '', mime, body.seconds, answers);
+    const id = Number(lastInsertRowid);
+    const file = `${id}.${EXT[mime]}`;
+    mkdirSync(RECORDINGS, { recursive: true });
+    writeFileSync(join(RECORDINGS, file), Buffer.from(body.data, 'base64'));
+    db.prepare('UPDATE recordings SET file = ? WHERE id = ?').run(file, id);
+    return c.json({ ok: true, id });
+  });
+
+  app.get('/recordings', (c) =>
+    c.json(
+      (db.prepare('SELECT id, created_at, label, mime, seconds, answers FROM recordings ORDER BY id DESC').all() as { answers: string }[]).map((r) => ({ ...r, answers: JSON.parse(r.answers) })),
+    ),
+  );
+
+  app.get('/recordings/:id/audio', (c) => {
+    const row = db.prepare('SELECT file, mime FROM recordings WHERE id = ?').get(Number(c.req.param('id'))) as { file: string; mime: string } | undefined;
+    const path = row && join(RECORDINGS, row.file);
+    if (!row || !/^\d+\.(webm|m4a|ogg)$/.test(row.file) || !path || !existsSync(path)) return c.json({ error: 'no recording' }, 404);
+    return c.body(readFileSync(path), 200, { 'content-type': row.mime });
+  });
+
+  app.delete('/recordings/:id', (c) => {
+    const id = Number(c.req.param('id'));
+    const row = db.prepare('SELECT file FROM recordings WHERE id = ?').get(id) as { file: string } | undefined;
+    if (!row) return c.json({ error: 'no recording' }, 404);
+    if (/^\d+\.(webm|m4a|ogg)$/.test(row.file)) rmSync(join(RECORDINGS, row.file), { force: true });
+    db.prepare('DELETE FROM recordings WHERE id = ?').run(id);
+    return c.json({ ok: true });
   });
 
   return app;

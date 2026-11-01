@@ -61,6 +61,24 @@ export const logReading = (attempts: { midi: number; outcome: 'clean' | 'lookup'
 };
 export const getReadingStats = (): Promise<ReadingStat[]> => (HOSTED ? Promise.resolve([]) : getJson<ReadingStat[]>('/api/reading/stats').catch(() => []));
 
+export type Answers = Partial<Record<'tone' | 'transitions' | 'articulation' | 'dynamics', { rating: number; note: string }>>;
+export type SavedTake = { id: number; created_at: string; label: string; mime: string; seconds: number; answers: Answers };
+export const getRecordings = (): Promise<SavedTake[]> => (HOSTED ? Promise.resolve([]) : getJson<SavedTake[]>('/api/recordings').catch(() => []));
+export const recordingUrl = (id: number) => `/api/recordings/${id}/audio`;
+export async function saveRecording(t: { label: string; blob: Blob; seconds: number; answers: Answers }): Promise<number> {
+  const buf = new Uint8Array(await t.blob.arrayBuffer());
+  let binary = '';
+  for (let i = 0; i < buf.length; i += 0x8000) binary += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+  const res = await fetch('/api/recordings', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ label: t.label, mime: t.blob.type || 'audio/webm', data: btoa(binary), seconds: t.seconds, answers: t.answers }),
+  });
+  if (!res.ok) throw new Error(`save failed: ${res.status}`);
+  return ((await res.json()) as { id: number }).id;
+}
+export const deleteRecording = (id: number) => send('DELETE', `/api/recordings/${id}`, {});
+
 /** A transcribed chart, sheet-music/<slug>.tune.json. */
 export async function loadChart<T>(slug: string): Promise<T> {
   if (!HOSTED) return getJson<T>(`/api/charts/${slug}`);

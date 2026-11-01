@@ -20,6 +20,7 @@ function fixture() {
   db.prepare("INSERT INTO long_tone_best (midi, seconds, achieved_at) VALUES (67, 14.2, '2026-10-31')").run();
   db.prepare("INSERT INTO intonation (midi, samples, sum_cents, updated_at) VALUES (75, 100, 1800, '2026-10-31')").run();
   db.prepare("INSERT INTO ear_answers (kind, item, correct, answered_at) VALUES ('interval', 'P5', 1, '2026-10-31T10:00:00Z')").run();
+  db.prepare("INSERT INTO recordings (created_at, label, file, mime, seconds, answers) VALUES ('2026-10-31T09:00:00Z', 'Autumn Leaves, 31 Oct', '1.webm', 'audio/webm', 62, ?)").run(JSON.stringify({ tone: { rating: 3, note: 'thin at the top' } }));
   return db;
 }
 
@@ -38,6 +39,7 @@ describe('buildSummary', () => {
     expect(text).toContain('G4 14.2s');
     expect(text).toContain('Eb5 +18');
     expect(text).toContain('interval: 100% of 1');
+    expect(text).toContain('Autumn Leaves, 31 Oct (62s): tone 3/5 (thin at the top)');
   });
   it('says so when there is nothing', () => {
     const empty = buildSummary(openDb(':memory:'), 7, NOW);

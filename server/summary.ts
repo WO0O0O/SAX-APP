@@ -67,6 +67,16 @@ export function buildSummary(db: DatabaseSync, days = 7, now = new Date()): stri
   out.push(off.length ? off.map((r) => `${name(Number(r.midi))} ${Number(r.avg) > 0 ? '+' : ''}${Math.round(Number(r.avg))}`).join(', ') + '.' : into.length ? 'Every measured note averages within 10 cents.' : 'No tuner data yet.');
   out.push('');
 
+  const takes = all(db, 'SELECT label, seconds, answers FROM recordings WHERE created_at >= ? ORDER BY id', since);
+  out.push('## Recorded takes and self-listen answers');
+  if (!takes.length) out.push('No takes recorded this period.');
+  for (const t of takes) {
+    const a = JSON.parse(String(t.answers)) as Record<string, { rating?: number; note?: string }>;
+    const parts = Object.entries(a).filter(([, v]) => v?.rating).map(([k, v]) => `${k} ${v.rating}/5${v.note ? ` (${v.note})` : ''}`);
+    out.push(`- ${t.label} (${Math.round(Number(t.seconds))}s)${parts.length ? ': ' + parts.join('; ') : ''}`);
+  }
+  out.push('');
+
   const ear = all(db, 'SELECT kind, count(*) AS n, sum(correct) AS ok FROM ear_answers WHERE answered_at >= ? GROUP BY kind ORDER BY kind', since);
   out.push('## Ear training');
   out.push(ear.length ? ear.map((e) => `${e.kind}: ${pct(Number(e.ok), Number(e.n))} of ${e.n}`).join('; ') + '.' : 'None this period.');

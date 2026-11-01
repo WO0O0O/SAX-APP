@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { openDb } from './db.ts';
 import { seed } from './seed.ts';
 import { api } from './api.ts';
@@ -6,7 +9,8 @@ import { api } from './api.ts';
 const setup = () => {
   const db = openDb(':memory:');
   seed(db);
-  return { db, app: api(db) };
+  const dir = mkdtempSync(join(tmpdir(), 'sax-test-'));
+  return { db, dir, app: api(db, dir) };
 };
 const json = (method: string, body: unknown) => ({ method, headers: { 'content-type': 'application/json', host: '127.0.0.1:5757' }, body: JSON.stringify(body) });
 const local = { headers: { host: '127.0.0.1:5757' } };
@@ -77,6 +81,36 @@ describe('api', () => {
     const rows = (await (await app.request('/reading/stats', local)).json()) as { midi: number; attempts: number; fumbled: number; lookups: number }[];
     expect(rows).toEqual([{ midi: 67, attempts: 2, fumbled: 1, lookups: 0 }, { midi: 70, attempts: 1, fumbled: 0, lookups: 1 }]);
     expect((await app.request('/reading', json('POST', { attempts: [{ midi: 67, outcome: 'great' }] }))).status).toBe(400);
+  });
+
+  it('stores a recording as a file, lists it with its answers, serves it and deletes it', async () => {
+    const { app, dir } = setup();
+    const data = Buffer.from('not really audio').toString('base64');
+    const res = await app.request('/recordings', json('POST', { label: 'Autumn Leaves take 1', mime: 'audio/webm;codecs=opus', data, seconds: 12.5, answers: { tone: 4 } }));
+    expect(res.status).toBe(200);
+    const { id } = (await res.json()) as { id: number };
+    expect(existsSync(join(dir, 'recordings', `${id}.webm`))).toBe(true);
+    const list = (await (await app.request('/recordings', local)).json()) as { id: number; label: string; answers: { tone: number } }[];
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({ label: 'Autumn Leaves take 1', answers: { tone: 4 } });
+    const audio = await app.request(`/recordings/${id}/audio`, local);
+    expect(audio.headers.get('content-type')).toBe('audio/webm');
+    expect(Buffer.from(await audio.arrayBuffer()).toString()).toBe('not really audio');
+    expect((await app.request(`/recordings/${id}`, { method: 'DELETE', headers: { host: '127.0.0.1:5757', 'content-type': 'application/json' } })).status).toBe(200);
+    expect(existsSync(join(dir, 'recordings', `${id}.webm`))).toBe(false);
+    expect((await app.request(`/recordings/${id}/audio`, local)).status).toBe(404);
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('refuses recordings with a bad type, label, length or data', async () => {
+    const { app, dir } = setup();
+    const ok = { label: 'x', mime: 'audio/webm', data: 'AAAA', seconds: 3 };
+    expect((await app.request('/recordings', json('POST', { ...ok, mime: 'text/html' }))).status).toBe(400);
+    expect((await app.request('/recordings', json('POST', { ...ok, label: 'x'.repeat(200) }))).status).toBe(400);
+    expect((await app.request('/recordings', json('POST', { ...ok, seconds: 0 }))).status).toBe(400);
+    expect((await app.request('/recordings', json('POST', { ...ok, data: '../../etc/passwd' }))).status).toBe(400);
+    expect((await app.request('/recordings/abc/audio', local)).status).toBe(404);
+    rmSync(dir, { recursive: true, force: true });
   });
 
   it('rejects chart slugs that try to leave the folder', async () => {

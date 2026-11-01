@@ -14,6 +14,7 @@ const TunesScreen = lazy(() => import('./screens/TunesScreen.tsx'));
 const QuizScreen = lazy(() => import('./screens/QuizScreen.tsx'));
 const EarScreen = lazy(() => import('./screens/EarScreen.tsx'));
 const TunerScreen = lazy(() => import('./screens/TunerScreen.tsx'));
+const RecordScreen = lazy(() => import('./screens/RecordScreen.tsx'));
 
 const ALL_SCREENS = [
   { id: 'scales', label: 'Scales' },
@@ -23,6 +24,7 @@ const ALL_SCREENS = [
   { id: 'quiz', label: 'Quiz' },
   { id: 'ear', label: 'Ear' },
   { id: 'tuner', label: 'Tuner' },
+  { id: 'record', label: 'Record' },
   { id: 'progress', label: 'Progress' },
 ] as const;
 type ScreenId = (typeof ALL_SCREENS)[number]['id'];
@@ -113,6 +115,7 @@ export function App() {
             {screen === 'quiz' && <QuizScreen onSceneDim={setDim} />}
             {screen === 'ear' && <EarScreen onSceneDim={setDim} />}
             {screen === 'tuner' && <TunerScreen onSceneDim={setDim} />}
+            {screen === 'record' && <RecordScreen onSceneDim={setDim} />}
             {screen === 'reading' && <ReadingScreen onSceneDim={setDim} />}
             {screen === 'progress' && <ProgressScreen onSceneDim={setDim} />}
           </Suspense>
