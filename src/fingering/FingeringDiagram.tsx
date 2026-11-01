@@ -33,10 +33,17 @@ const KEYS: KeyShape[] = [
 
 const isPearl = (k: KeyShape) => k.w === k.h && k.w > 20;
 
-/** `compact` hides the labels of small keys that aren't pressed. */
-export function FingeringDiagram({ pressed, compact = false }: { pressed: KeyId[]; compact?: boolean }) {
+type Props = {
+  pressed: KeyId[];
+  /** Hides the labels of small keys that aren't pressed. */
+  compact?: boolean;
+  /** Makes every key a toggle button (the quiz). */
+  onToggle?: (id: KeyId) => void;
+};
+
+export function FingeringDiagram({ pressed, compact = false, onToggle }: Props) {
   return (
-    <svg viewBox="0 30 220 460" className="block h-auto w-full" role="img" aria-label={`Keys pressed: ${pressed.join(', ') || 'none'}`}>
+    <svg viewBox="0 30 220 460" className="block h-auto w-full" role={onToggle ? 'group' : 'img'} aria-label={`Keys pressed: ${pressed.join(', ') || 'none'}`}>
       <path d="M110,62 L110,420" stroke="#efe6da" strokeOpacity="0.1" strokeWidth="26" strokeLinecap="round" />
       <line x1="76" x2="144" y1="252" y2="252" stroke="#efe6da" strokeOpacity="0.3" strokeDasharray="3 5" />
       {KEYS.map((k) => {
@@ -45,7 +52,24 @@ export function FingeringDiagram({ pressed, compact = false }: { pressed: KeyId[
         const showLabel = pearl || on || !compact;
         const labelLeft = k.id === 'altFs';
         return (
-          <g key={k.id}>
+          <g
+            key={k.id}
+            {...(onToggle && {
+              role: 'button',
+              tabIndex: 0,
+              'aria-pressed': on,
+              'aria-label': `${k.label} key`,
+              className: 'cursor-pointer',
+              onClick: () => onToggle(k.id),
+              onKeyDown: (e: React.KeyboardEvent) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                  e.preventDefault();
+                  onToggle(k.id);
+                }
+              },
+            })}
+          >
+            {onToggle && <rect x={k.x - Math.max(k.w, 26) / 2 - 4} y={k.y - Math.max(k.h, 20) / 2 - 3} width={Math.max(k.w, 26) + 8} height={Math.max(k.h, 20) + 6} fill="transparent" />}
             {on && <circle cx={k.x} cy={k.y} r={pearl ? 30 : 18} fill="#e0863a" opacity="0.18" />}
             <rect
               x={k.x - k.w / 2}

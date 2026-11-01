@@ -87,5 +87,30 @@ export function api(db: DatabaseSync): Hono {
     return c.json({ ok: true });
   });
 
+  // Fingering quiz: one row per answer; stats per note for weighting and the Progress screen.
+  app.post('/quiz', async (c) => {
+    const { midi, mode, correct } = await c.req.json<{ midi: number; mode: string; correct: boolean }>();
+    if (!Number.isInteger(midi) || midi < 58 || midi > 90) return c.json({ error: 'midi out of range' }, 400);
+    if (mode !== 'note-keys' && mode !== 'keys-note') return c.json({ error: 'bad mode' }, 400);
+    db.prepare('INSERT INTO quiz_answers (midi, mode, correct, answered_at) VALUES (?, ?, ?, ?)').run(
+      midi,
+      mode,
+      correct ? 1 : 0,
+      new Date().toISOString(),
+    );
+    return c.json({ ok: true });
+  });
+
+  app.get('/quiz/stats', (c) =>
+    c.json(
+      db
+        .prepare(
+          `SELECT midi, count(*) AS answered, sum(correct) AS correct, max(answered_at) AS last_at
+           FROM quiz_answers GROUP BY midi ORDER BY midi`,
+        )
+        .all(),
+    ),
+  );
+
   return app;
 }

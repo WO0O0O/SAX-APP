@@ -1,21 +1,23 @@
 import { useEffect, useState } from 'react';
-import { fromMidi } from '../../shared/theory.ts';
-import { getJson, getTunes, type NoteRow, type Tune } from '../api.ts';
+import { namesOf } from '../music/quiz.ts';
+import { getJson, getQuizStats, getTunes, type NoteRow, type QuizStat, type Tune } from '../api.ts';
 import { TuneProgress } from '../tunes/TuneProgress.tsx';
 
 // Tune milestones (editable here or on the Tunes screen) and fingering lookups per note.
 export function ProgressScreen({ onSceneDim }: { onSceneDim: (dim: number) => void }) {
   const [tunes, setTunes] = useState<Tune[] | null>(null);
   const [notes, setNotes] = useState<NoteRow[]>([]);
+  const [quiz, setQuiz] = useState<QuizStat[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => onSceneDim(0.5), [onSceneDim]);
 
   useEffect(() => {
-    Promise.all([getTunes(), getJson<NoteRow[]>('/api/notes')])
-      .then(([t, n]) => {
+    Promise.all([getTunes(), getJson<NoteRow[]>('/api/notes'), getQuizStats()])
+      .then(([t, n, q]) => {
         setTunes(t);
         setNotes(n);
+        setQuiz(q);
       })
       .catch((e: Error) => setError(e.message));
   }, []);
@@ -60,7 +62,7 @@ export function ProgressScreen({ onSceneDim }: { onSceneDim: (dim: number) => vo
             <ul className="mt-3 space-y-1.5">
               {looked.map((n) => (
                 <li key={n.pitch} className="grid grid-cols-[3.5rem_1fr_2.5rem] items-center gap-3 text-sm">
-                  <span className="font-semibold">{fromMidi(n.midi).replace('#', '♯').replace(/b(?=\d)/, '♭')}</span>
+                  <span className="font-semibold">{namesOf(n.midi).split(' / ')[0]}</span>
                   <span className="h-2.5 rounded-full bg-ink/60">
                     <span className="block h-full rounded-full bg-ember" style={{ width: `${(n.lookups / max) * 100}%` }} />
                   </span>
@@ -69,6 +71,33 @@ export function ProgressScreen({ onSceneDim }: { onSceneDim: (dim: number) => vo
               ))}
             </ul>
           </>
+        )}
+      </section>
+
+      <section className="panel p-6 lg:col-span-2">
+        <h2 className="font-display text-3xl">Quiz accuracy</h2>
+        <p className="mt-1 text-sm text-smoke-dim">Fingering quiz answers per note. The weakest notes are asked most often.</p>
+        {quiz.length === 0 ? (
+          <p className="mt-6 text-smoke-dim">No quiz answers yet.</p>
+        ) : (
+          <ul className="mt-4 grid gap-x-8 gap-y-1.5 sm:grid-cols-2 xl:grid-cols-3">
+            {[...quiz]
+              .sort((a, b) => a.correct / a.answered - b.correct / b.answered || b.answered - a.answered)
+              .map((q) => {
+                const pct = Math.round((q.correct / q.answered) * 100);
+                return (
+                  <li key={q.midi} className="grid grid-cols-[3.5rem_1fr_4.5rem] items-center gap-3 text-sm">
+                    <span className="font-semibold">{namesOf(q.midi).split(' / ')[0]}</span>
+                    <span className="h-2.5 rounded-full bg-ink/60">
+                      <span className={`block h-full rounded-full ${pct >= 80 ? 'bg-emerald-400' : pct >= 50 ? 'bg-ember' : 'bg-wine'}`} style={{ width: `${pct}%` }} />
+                    </span>
+                    <span className="text-right tabular-nums text-smoke-dim">
+                      {pct}% · {q.answered}
+                    </span>
+                  </li>
+                );
+              })}
+          </ul>
         )}
       </section>
     </div>

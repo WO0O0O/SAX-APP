@@ -5,6 +5,7 @@ import { HOSTED } from './mode.ts';
 import { LockedError, openSealed } from './sealed.ts';
 
 export type Tune = { id: number; title: string; key_concert: string | null; status: string; stage: number; tempo: number | null; no_chart: number };
+export type QuizStat = { midi: number; answered: number; correct: number; last_at: string };
 export type NoteRow = { pitch: string; midi: number; lookups: number; last_seen: string | null };
 
 export async function getJson<T>(path: string): Promise<T> {
@@ -28,6 +29,14 @@ export const updateTune = (id: number, patch: Partial<{ stage: number; tempo: nu
 export const logLookup = (midi: number) => {
   if (!HOSTED) send('POST', '/api/lookup', { midi }).catch(() => {});
 };
+
+/** Fire-and-forget: one fingering-quiz answer. */
+export const logQuiz = (midi: number, mode: 'note-keys' | 'keys-note', correct: boolean) => {
+  if (!HOSTED) send('POST', '/api/quiz', { midi, mode, correct }).catch(() => {});
+};
+/** Saved quiz history per note (the Mac only; empty online). */
+export const getQuizStats = (): Promise<QuizStat[]> => (HOSTED ? Promise.resolve([]) : getJson<QuizStat[]>('/api/quiz/stats').catch(() => []));
+export const getNotes = (): Promise<NoteRow[]> => (HOSTED ? Promise.resolve([]) : getJson<NoteRow[]>('/api/notes').catch(() => []));
 
 /** A transcribed chart, sheet-music/<slug>.tune.json. */
 export async function loadChart<T>(slug: string): Promise<T> {

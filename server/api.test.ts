@@ -29,6 +29,17 @@ describe('api', () => {
     expect(db.prepare("SELECT lookups FROM notes_progress WHERE pitch = 'Bb3'").get()).toEqual({ lookups: 1 });
   });
 
+  it('stores quiz answers and reports accuracy per note', async () => {
+    const { app } = setup();
+    await app.request('/quiz', json('POST', { midi: 67, mode: 'note-keys', correct: true }));
+    await app.request('/quiz', json('POST', { midi: 67, mode: 'keys-note', correct: false }));
+    await app.request('/quiz', json('POST', { midi: 70, mode: 'note-keys', correct: true }));
+    const stats = (await (await app.request('/quiz/stats', local)).json()) as { midi: number; answered: number; correct: number }[];
+    expect(stats.map((r) => [r.midi, r.answered, r.correct])).toEqual([[67, 2, 1], [70, 1, 1]]);
+    expect((await app.request('/quiz', json('POST', { midi: 40, mode: 'note-keys', correct: true }))).status).toBe(400);
+    expect((await app.request('/quiz', json('POST', { midi: 67, mode: 'nope', correct: true }))).status).toBe(400);
+  });
+
   it('rejects chart slugs that try to leave the folder', async () => {
     const { app } = setup();
     expect((await app.request('/charts/..%2Fpackage', local)).status).toBe(404);
