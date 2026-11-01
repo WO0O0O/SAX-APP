@@ -3,6 +3,8 @@ import type { DatabaseSync } from 'node:sqlite';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fromMidi } from '../shared/theory.ts';
+import { transaction } from './db.ts';
+import { buildSummary } from './summary.ts';
 
 // Local-only tune charts (git-ignored), see src/music/chart.ts.
 const CHARTS_DIR = process.env.SAX_CHARTS_DIR ?? join(import.meta.dirname, '..', 'sheet-music');
@@ -128,6 +130,73 @@ export function api(db: DatabaseSync): Hono {
         .all(),
     ),
   );
+
+  // Tuner: how sharp or flat each note is played, summed up so only totals are stored.
+  app.post('/intonation', async (c) => {
+    const { samples } = await c.req.json<{ samples: { midi: number; n: number; sum: number }[] }>();
+    if (!Array.isArray(samples) || samples.length > 64) return c.json({ error: 'bad samples' }, 400);
+    for (const s of samples)
+      if (!Number.isInteger(s.midi) || s.midi < 58 || s.midi > 90 || !Number.isInteger(s.n) || s.n < 1 || s.n > 100000 || !Number.isFinite(s.sum))
+        return c.json({ error: 'bad sample' }, 400);
+    const now = new Date().toISOString();
+    transaction(db, () => {
+      const up = db.prepare(
+        `INSERT INTO intonation (midi, samples, sum_cents, updated_at) VALUES (?, ?, ?, ?)
+         ON CONFLICT (midi) DO UPDATE SET samples = samples + excluded.samples, sum_cents = sum_cents + excluded.sum_cents, updated_at = excluded.updated_at`,
+      );
+      for (const s of samples) up.run(s.midi, s.n, s.sum, now);
+    });
+    return c.json({ ok: true });
+  });
+
+  app.get('/intonation', (c) =>
+    c.json(db.prepare('SELECT midi, samples, sum_cents / samples AS avg_cents FROM intonation WHERE samples > 0 ORDER BY midi').all()),
+  );
+
+  // Long tones: keep the best hold per note.
+  app.post('/longtone', async (c) => {
+    const { midi, seconds } = await c.req.json<{ midi: number; seconds: number }>();
+    if (!Number.isInteger(midi) || midi < 58 || midi > 90) return c.json({ error: 'midi out of range' }, 400);
+    if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 600) return c.json({ error: 'bad seconds' }, 400);
+    db.prepare(
+      `INSERT INTO long_tone_best (midi, seconds, achieved_at) VALUES (?, ?, ?)
+       ON CONFLICT (midi) DO UPDATE SET seconds = excluded.seconds, achieved_at = excluded.achieved_at WHERE excluded.seconds > seconds`,
+    ).run(midi, seconds, new Date().toISOString());
+    return c.json({ ok: true });
+  });
+
+  app.get('/longtone', (c) => c.json(db.prepare('SELECT midi, seconds, achieved_at FROM long_tone_best ORDER BY midi').all()));
+
+  // Sight-reading results per note.
+  app.post('/reading', async (c) => {
+    const { attempts } = await c.req.json<{ attempts: { midi: number; outcome: string }[] }>();
+    if (!Array.isArray(attempts) || attempts.length > 200) return c.json({ error: 'bad attempts' }, 400);
+    for (const a of attempts)
+      if (!Number.isInteger(a.midi) || a.midi < 58 || a.midi > 90 || !['clean', 'lookup', 'fumbled'].includes(a.outcome)) return c.json({ error: 'bad attempt' }, 400);
+    const now = new Date().toISOString();
+    transaction(db, () => {
+      const ins = db.prepare('INSERT INTO reading_attempts (midi, outcome, at) VALUES (?, ?, ?)');
+      for (const a of attempts) ins.run(a.midi, a.outcome, now);
+    });
+    return c.json({ ok: true });
+  });
+
+  app.get('/reading/stats', (c) =>
+    c.json(
+      db
+        .prepare(
+          `SELECT midi, count(*) AS attempts, sum(outcome = 'fumbled') AS fumbled, sum(outcome = 'lookup') AS lookups
+           FROM reading_attempts GROUP BY midi ORDER BY midi`,
+        )
+        .all(),
+    ),
+  );
+
+  // A markdown practice summary for the Claude tutor.
+  app.get('/export', (c) => {
+    const days = Math.min(90, Math.max(1, Number(c.req.query('days')) || 7));
+    return c.text(buildSummary(db, days), 200, { 'content-type': 'text/markdown; charset=utf-8' });
+  });
 
   return app;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Accidental, BarlineType, Beam, Dot, Formatter, Renderer, Stave, StaveNote, StaveTie, Tuplet } from 'vexflow/bravura';
-import { LETTERS, nameOf, parseSpelling, spellDegree, type Note } from '../../shared/theory.ts';
+import { LETTERS, nameOf, type Note } from '../../shared/theory.ts';
+import { keyAccidentals } from '../music/keys.ts';
 
 // Written-pitch notation with tappable notes. Two uses:
 // - scale lines: whole notes, no time signature, `barsPerLine` = 1 and each "bar" is a line;
@@ -49,30 +50,32 @@ const INK = '#1a1210';
 const FADED = '#9a8b80';
 const ACC_ASCII: Record<number, string> = { [-2]: 'bb', [-1]: 'b', 0: 'n', 1: '#', 2: '##' };
 const BEATS = { w: 4, h: 2, q: 1, '8': 0.5 };
-const MAJOR = ['1', '2', '3', '4', '5', '6', '7'];
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const vexKey = (n: Note) => `${LETTERS[n.letter].toLowerCase()}/${n.octave}`;
 const beatsOf = (it: ScoreItem) => BEATS[it.duration] * (it.dots ? 1.5 : 1) * (it.triplet ? 2 / 3 : 1);
 
-/** Accidental per letter in a major key signature, e.g. G -> { F: +1 }. */
-function keyAccidentals(keySig?: string): number[] {
-  const out = [0, 0, 0, 0, 0, 0, 0];
-  if (!keySig) return out;
-  const tonic = parseSpelling(keySig);
-  for (const d of MAJOR) {
-    const s = spellDegree(tonic, d);
-    out[s.letter] = s.acc;
-  }
-  return out;
-}
-
 let fontsReady: Promise<unknown> | null = null;
+
+/** Highlights one note by its item index, scrolling it into view if it is off screen. */
+function applyCursor(root: HTMLElement, cursor: number | undefined, scroll: boolean) {
+  root.querySelectorAll('.note-hit.is-cursor').forEach((n) => n.classList.remove('is-cursor'));
+  if (cursor === undefined) return;
+  const hit = root.querySelector(`.note-hit[data-i="${cursor}"]`);
+  if (!hit) return;
+  hit.classList.add('is-cursor');
+  if (scroll) {
+    const r = hit.getBoundingClientRect();
+    if (r.top < 80 || r.bottom > window.innerHeight - 40) hit.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+}
 
 export function Score(props: Props) {
   const { bars, barsPerLine, timeSig, keySig, chords, labels, labelFade, colors = {}, faded, selected, onTap, onChordTap, activeChord, cursor, width = 900 } = props;
   const host = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
+  const cursorRef = useRef(cursor);
+  cursorRef.current = cursor;
 
   useEffect(() => {
     fontsReady ??= document.fonts.load('30px Bravura');
@@ -252,20 +255,14 @@ export function Score(props: Props) {
     svg.removeAttribute('height');
     svg.style.width = '100%';
     svg.style.height = 'auto';
+    // A redraw wipes the highlight, so put it back.
+    applyCursor(el, cursorRef.current, false);
   }, [bars, barsPerLine, timeSig, keySig, chords, labels, colors, faded, labelFade, selected, onTap, onChordTap, activeChord?.bar, activeChord?.index, width, ready]);
 
   // The playback cursor moves without redrawing the whole score.
   useEffect(() => {
-    const el = host.current;
-    if (!el) return;
-    el.querySelectorAll('.note-hit.is-cursor').forEach((n) => n.classList.remove('is-cursor'));
-    if (cursor === undefined) return;
-    const hit = el.querySelector(`.note-hit[data-i="${cursor}"]`);
-    if (!hit) return;
-    hit.classList.add('is-cursor');
-    const r = hit.getBoundingClientRect();
-    if (r.top < 80 || r.bottom > window.innerHeight - 40) hit.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  }, [cursor, bars, ready]);
+    if (host.current) applyCursor(host.current, cursor, true);
+  }, [cursor]);
 
   return <div ref={host} className="score" />;
 }

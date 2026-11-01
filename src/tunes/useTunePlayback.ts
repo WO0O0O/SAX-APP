@@ -20,6 +20,7 @@ export function useTunePlayback(chart: Chart | null) {
   const [countIn, setCountIn] = useState(true);
   const [click, setClick] = useState(false);
   const [melody, setMelody] = useState(true);
+  const [silent, setSilent] = useState(false);
   const [loop, setLoop] = useState(false);
   const [from, setFrom] = useState(1);
   const [to, setTo] = useState(1);
@@ -79,7 +80,7 @@ export function useTunePlayback(chart: Chart | null) {
         beatsPerBar: bpb,
         voice,
         cursorEvents: melody ? swungCursor(piece.events, swing) : [],
-        levels: { melody: 1, band: 0.75 },
+        levels: silent ? { melody: 0, band: 0 } : { melody: 1, band: 0.75 },
         // Speed trainer: every few loops, a little faster.
         onLoop: (n) => {
           const t = trainerRef.current;
@@ -87,7 +88,7 @@ export function useTunePlayback(chart: Chart | null) {
         },
       });
     },
-    [chart, piece, loop, from, to, melody, swing, click, bpm, countIn, voice, player, band, seed, setBpm],
+    [chart, piece, loop, from, to, melody, swing, click, bpm, countIn, voice, player, band, seed, setBpm, silent],
   );
 
   /** Plays a handful of notes (a scale, an arpeggio or a chord), not the chart. */
@@ -132,6 +133,7 @@ export function useTunePlayback(chart: Chart | null) {
     countIn, setCountIn,
     click, setClick,
     melody, setMelody,
+    silent, setSilent,
     loop, setLoop,
     from, setFrom,
     to, setTo,

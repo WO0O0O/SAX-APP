@@ -30,9 +30,18 @@ export function rng(seed: number) {
   };
 }
 
-type Options = { spellings: Spelling[]; low: number; high: number; bars: number; seed: number; maxLeap?: number };
+type Options = {
+  spellings: Spelling[];
+  low: number;
+  high: number;
+  bars: number;
+  seed: number;
+  maxLeap?: number;
+  /** How much to favour landing on a note (written midi): weak notes get a bigger number. Omit for an even walk. */
+  weight?: (midi: number) => number;
+};
 
-export function generateExercise({ spellings, low, high, bars, seed, maxLeap = 7 }: Options): ScoreItem[][] {
+export function generateExercise({ spellings, low, high, bars, seed, maxLeap = 7, weight }: Options): ScoreItem[][] {
   const random = rng(seed);
   const pick = <T,>(xs: T[]) => xs[Math.floor(random() * xs.length)];
   const pool = fullRange(spellings, low, high);
@@ -52,10 +61,26 @@ export function generateExercise({ spellings, low, high, bars, seed, maxLeap = 7
       } else if (b === 0 && k === 0) {
         note = pool[i];
       } else {
-        let next = i + pick(STEPS);
-        if (next < 0 || next >= pool.length) next = i - Math.sign(next - i);
-        if (Math.abs(pool[next].midi - pool[i].midi) > maxLeap) next = i + Math.sign(next - i);
-        i = Math.max(0, Math.min(pool.length - 1, next));
+        if (weight) {
+          // Weighted: choose among the steps that stay in range and within the leap limit, favouring weak notes.
+          const options = STEPS.map((s) => i + s).filter((n) => n >= 0 && n < pool.length && Math.abs(pool[n].midi - pool[i].midi) <= maxLeap);
+          const ws = options.map((n) => Math.max(0.05, weight(pool[n].midi)));
+          let r = random() * ws.reduce((a, c) => a + c, 0);
+          let chosen = options[options.length - 1] ?? i;
+          for (let o = 0; o < options.length; o++) {
+            r -= ws[o];
+            if (r <= 0) {
+              chosen = options[o];
+              break;
+            }
+          }
+          i = chosen;
+        } else {
+          let next = i + pick(STEPS);
+          if (next < 0 || next >= pool.length) next = i - Math.sign(next - i);
+          if (Math.abs(pool[next].midi - pool[i].midi) > maxLeap) next = i + Math.sign(next - i);
+          i = Math.max(0, Math.min(pool.length - 1, next));
+        }
         note = pool[i];
       }
       return { note, duration };

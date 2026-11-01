@@ -51,6 +51,34 @@ describe('api', () => {
     expect((await app.request('/ear', json('POST', { kind: 'chord', item: '', correct: true }))).status).toBe(400);
   });
 
+  it('sums intonation samples per note and averages them', async () => {
+    const { app } = setup();
+    await app.request('/intonation', json('POST', { samples: [{ midi: 67, n: 10, sum: 50 }, { midi: 70, n: 4, sum: -20 }] }));
+    await app.request('/intonation', json('POST', { samples: [{ midi: 67, n: 10, sum: 30 }] }));
+    const rows = (await (await app.request('/intonation', local)).json()) as { midi: number; samples: number; avg_cents: number }[];
+    expect(rows).toEqual([{ midi: 67, samples: 20, avg_cents: 4 }, { midi: 70, samples: 4, avg_cents: -5 }]);
+    expect((await app.request('/intonation', json('POST', { samples: [{ midi: 10, n: 1, sum: 0 }] }))).status).toBe(400);
+    expect((await app.request('/intonation', json('POST', { samples: [{ midi: 67, n: 1, sum: 'x' }] }))).status).toBe(400);
+  });
+
+  it('keeps only the longest long-tone hold per note', async () => {
+    const { app } = setup();
+    await app.request('/longtone', json('POST', { midi: 67, seconds: 12.5 }));
+    await app.request('/longtone', json('POST', { midi: 67, seconds: 8 }));
+    await app.request('/longtone', json('POST', { midi: 67, seconds: 15 }));
+    const rows = (await (await app.request('/longtone', local)).json()) as { midi: number; seconds: number }[];
+    expect(rows.map((r) => [r.midi, r.seconds])).toEqual([[67, 15]]);
+    expect((await app.request('/longtone', json('POST', { midi: 67, seconds: -1 }))).status).toBe(400);
+  });
+
+  it('stores reading attempts and counts fumbles per note', async () => {
+    const { app } = setup();
+    await app.request('/reading', json('POST', { attempts: [{ midi: 67, outcome: 'clean' }, { midi: 67, outcome: 'fumbled' }, { midi: 70, outcome: 'lookup' }] }));
+    const rows = (await (await app.request('/reading/stats', local)).json()) as { midi: number; attempts: number; fumbled: number; lookups: number }[];
+    expect(rows).toEqual([{ midi: 67, attempts: 2, fumbled: 1, lookups: 0 }, { midi: 70, attempts: 1, fumbled: 0, lookups: 1 }]);
+    expect((await app.request('/reading', json('POST', { attempts: [{ midi: 67, outcome: 'great' }] }))).status).toBe(400);
+  });
+
   it('rejects chart slugs that try to leave the folder', async () => {
     const { app } = setup();
     expect((await app.request('/charts/..%2Fpackage', local)).status).toBe(404);

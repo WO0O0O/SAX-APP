@@ -47,6 +47,10 @@ export function PlaybackBar({ pb, canPlayFrom, onPlayFrom }: { pb: Playback; can
         <input type="checkbox" checked={pb.countIn} onChange={(e) => pb.setCountIn(e.target.checked)} className="size-4 accent-lookup" />
         Count-in
       </label>
+      <label className="flex items-center gap-1.5" title="Follow the notes and fingerings without any sound: quiet practice">
+        <input type="checkbox" checked={pb.silent} onChange={(e) => pb.setSilent(e.target.checked)} className="size-4 accent-lookup" />
+        Silent
+      </label>
       <label className="flex items-center gap-1.5">
         <input type="checkbox" checked={pb.click} onChange={(e) => pb.setClick(e.target.checked)} className="size-4 accent-lookup" />
         Click

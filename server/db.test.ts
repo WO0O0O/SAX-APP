@@ -9,7 +9,7 @@ const tables = (db: ReturnType<typeof openDb>) =>
 describe('database', () => {
   it('migrates to just the tables the app uses', () => {
     const db = openDb(':memory:');
-    expect(tables(db)).toEqual(['ear_answers', 'notes_progress', 'quiz_answers', 'schema_migrations', 'tune_progress', 'tunes']);
+    expect(tables(db)).toEqual(['ear_answers', 'intonation', 'long_tone_best', 'notes_progress', 'quiz_answers', 'reading_attempts', 'schema_migrations', 'tune_progress', 'tunes']);
     const cols = db.prepare('PRAGMA table_info(notes_progress)').all().map((c) => c.name);
     expect(cols).toEqual(['pitch', 'midi', 'first_seen', 'lookups', 'last_seen']);
   });

@@ -45,6 +45,22 @@ export const logEar = (kind: 'interval' | 'chord' | 'phrase' | 'tune', item: str
 };
 export const getEarStats = (): Promise<EarStat[]> => (HOSTED ? Promise.resolve([]) : getJson<EarStat[]>('/api/ear/stats').catch(() => []));
 
+export type IntonationRow = { midi: number; samples: number; avg_cents: number };
+export type LongToneRow = { midi: number; seconds: number };
+export type ReadingStat = { midi: number; attempts: number; fumbled: number; lookups: number };
+export const logIntonation = (samples: { midi: number; n: number; sum: number }[]) => {
+  if (!HOSTED && samples.length) send('POST', '/api/intonation', { samples }).catch(() => {});
+};
+export const getIntonation = (): Promise<IntonationRow[]> => (HOSTED ? Promise.resolve([]) : getJson<IntonationRow[]>('/api/intonation').catch(() => []));
+export const logLongTone = (midi: number, seconds: number) => {
+  if (!HOSTED) send('POST', '/api/longtone', { midi, seconds: +seconds.toFixed(1) }).catch(() => {});
+};
+export const getLongTones = (): Promise<LongToneRow[]> => (HOSTED ? Promise.resolve([]) : getJson<LongToneRow[]>('/api/longtone').catch(() => []));
+export const logReading = (attempts: { midi: number; outcome: 'clean' | 'lookup' | 'fumbled' }[]) => {
+  if (!HOSTED && attempts.length) send('POST', '/api/reading', { attempts }).catch(() => {});
+};
+export const getReadingStats = (): Promise<ReadingStat[]> => (HOSTED ? Promise.resolve([]) : getJson<ReadingStat[]>('/api/reading/stats').catch(() => []));
+
 /** A transcribed chart, sheet-music/<slug>.tune.json. */
 export async function loadChart<T>(slug: string): Promise<T> {
   if (!HOSTED) return getJson<T>(`/api/charts/${slug}`);
