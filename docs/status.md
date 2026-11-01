@@ -1,6 +1,6 @@
 # Status (living file: update every session)
 
-**Last updated:** 2026-10-26
+**Last updated:** 2026-11-01
 **State:** in daily use; development paused (2026-10-24). Online at https://sax.wo0.dev (Vercel, any device, nothing saved); progress saved only on the Mac via `sax`. How it's built: [architecture.md](architecture.md).
 
 ## What the app is
@@ -26,7 +26,7 @@ Free practice areas, no timers. Fingerings for every written note are the core, 
 ## Built
 - **Scales:** circle of fifths, 21 scales with sound / use / songs, one octave + whole horn in notation, a fingering card per note.
 - **All notes:** every note B♭3–F♯6 with alternates.
-- **Tunes:** Autumn Leaves (pickup + 32 bars, chords) and Smooth Operator (9 bars) from the Online Sax Academy PDFs; Naima (40 bars, no chords) and Happy Birthday (3/4), both from PNG lead sheets converted to PDF. Tap for fingering, note names toggle, fingering card for every note in the tune, editable milestone.
+- **Tunes:** Autumn Leaves (pickup + 32 bars, chords) and Smooth Operator (9 bars) from the Online Sax Academy PDFs; Naima (40 bars, no chords) Happy Birthday (3/4) and Is It a Crime (12/8, 40 bars, quarter-note triplet, ties; transcribed from a PNG), the PNGs converted to PDF. Tap for fingering, note names toggle, fingering card for every note in the tune, editable milestone.
 - **Reading:** generated exercises in the chosen key + scale within his range; check fingering (saved as a lookup) or mark fumbled.
 - **Progress:** editable milestone / best tempo / no-chart per tune; lookups per note.
 - Tests: transposition, spelling, scales, generator, charts, fingerings, DB, API.

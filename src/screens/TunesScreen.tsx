@@ -161,7 +161,7 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                   <Score
                     bars={loaded.bars}
                     chords={loaded.chords}
-                    barsPerLine={narrow ? 2 : 4}
+                    barsPerLine={narrow ? 2 : loaded.timeSig === "12/8" ? 3 : 4}
                     timeSig={loaded.timeSig ?? "4/4"}
                     keySig={loaded.keySig}
                     labels={labels}

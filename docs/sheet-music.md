@@ -253,7 +253,7 @@ The file name must match the tune's title as a "slug": `Smooth Operator` → `sm
 ## 10. Current limits
 
 The renderer handles what the current charts need. A new chart might need more:
-- **Time signature:** 4/4 by default; a chart can set `"timeSig": "3/4"` (Happy Birthday does). No changing metre mid-tune.
+- **Time signature:** 4/4 by default; a chart can set `"timeSig"` such as `"3/4"` or `"12/8"` (bar length is counted in quarter notes, so 12/8 = 6). A bar holding a single `r/w` counts as a whole-bar rest in any metre. No changing metre mid-tune.
 - **One melody line.** No chords on the staff, no second voice.
 - **No repeat signs, first/second endings, D.C./coda, dynamics, articulations or lyrics.** Charts that use them are written out in full.
 - **No slurs.** Only ties (same pitch). A slur in the PDF can be left out; it doesn't change the notes or fingerings.

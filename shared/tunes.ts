@@ -8,4 +8,5 @@ export const TUNES: [string, string | null, 'active' | 'queued'][] = [
   ['In a Sentimental Mood', null, 'queued'],
   ['12-bar blues', 'F', 'queued'],
   ['Happy Birthday', 'E♭', 'queued'],
+  ['Is It a Crime', null, 'queued'],
 ];
