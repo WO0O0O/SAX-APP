@@ -13,48 +13,48 @@
       "bytes": 62502
     },
     "autumn-leaves.tune.json": {
-      "sha256": "a80a06009d8d69716675983c97f85180d69323789f2f5ff11938d3750892196a",
-      "bytes": 1986
+      "sha256": "d3bd5fe4fbd9070cb4a94f4cbeec25a16a78d22c2a7197a3adda33e86a19ad60",
+      "bytes": 2019
     },
     "happy-birthday.pdf": {
       "sha256": "c510a301684d1d03c4c8931bc3806361415c1b8b863bc764cf8f9177b2e64afa",
       "bytes": 50618
     },
     "happy-birthday.tune.json": {
-      "sha256": "ae87d79cc2b654949db021576e377bd7c57c83118d6c885701752192b8bf873a",
-      "bytes": 612
+      "sha256": "32744768d64da526dbf73b0c696500aa84f741950e83a06221bc9feb724494f8",
+      "bytes": 1059
     },
     "is-it-a-crime.pdf": {
       "sha256": "b0d1d9b91379feba8271e9c76ebef8206e8548d36af39643c1cd948fd5236b0f",
       "bytes": 286807
     },
     "is-it-a-crime.tune.json": {
-      "sha256": "2801d3b960bcd13da1eff83c71a432119fec5bd67f6df219b395a78b09097f5a",
-      "bytes": 2644
+      "sha256": "3aaafcbb004fa15bdf1fbf9f105d1268e14739a7cc0306529850bccd920a6c04",
+      "bytes": 2677
     },
     "my-one-and-only-love.pdf": {
       "sha256": "be3c85765fa407d97c0540ed05f6e47d356600f2cfa9d7a711e4b27b129d2c16",
       "bytes": 181031
     },
     "my-one-and-only-love.tune.json": {
-      "sha256": "dea021460e4de5d5243b986d0630454036e846445b3641243c9d722ad63145ec",
-      "bytes": 4054
+      "sha256": "32838ba418e18d9d494e061c474b1401745014e6d46d6a21d86989fe8209df2c",
+      "bytes": 4086
     },
     "naima.pdf": {
       "sha256": "e7e051b5e6e284d1407c5633db8af19fe6d27c778b9a519393434f112570ff8c",
       "bytes": 167278
     },
     "naima.tune.json": {
-      "sha256": "86189ff62abd1af34e95bfbd77fa53771fcf26132087566590fe14226bbe1d07",
-      "bytes": 1989
+      "sha256": "a8d7e28e80266e9143d60859f91d0f57686c1f08ddd00aaeb2a726e9612858ca",
+      "bytes": 2004
     },
     "smooth-operator-sade.pdf": {
       "sha256": "1d15c07139ca67932ffce28dee69a779d7593cd29d497acdad3a28cf3aa96a87",
       "bytes": 22595
     },
     "smooth-operator.tune.json": {
-      "sha256": "102af44ac17bc9f3dc6136c9248b5fa4b34c9dbf2609223f0b435dd2010c183a",
-      "bytes": 666
+      "sha256": "2a78ccc0e435df9c21ac61064736d2c027037a71d62513c9ce544a7b3111bcf6",
+      "bytes": 681
     }
   }
 }
