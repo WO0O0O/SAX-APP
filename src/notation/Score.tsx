@@ -171,6 +171,8 @@ export function Score(props: Props) {
 
       // Chord symbols above the beat they start on.
       if (chords?.[b]) {
+        let lastEnd = -Infinity; // right edge of the previous chord; a chord that would overlap it is raised
+        let raised = false;
         for (const chord of chords[b]) {
           let beat = 0;
           const target = items.find((e) => {
@@ -179,7 +181,9 @@ export function Score(props: Props) {
             return hit;
           });
           const cx = target ? target.sn.getAbsoluteX() : stave.getNoteStartX();
-          addText(cx - 4, y + 4, chord.name, 'chord');
+          raised = cx - 4 < lastEnd && !raised;
+          lastEnd = cx - 4 + chord.name.length * 9;
+          addText(cx - 4, y + 4 - (raised ? 13 : 0), chord.name, 'chord');
         }
       }
 
