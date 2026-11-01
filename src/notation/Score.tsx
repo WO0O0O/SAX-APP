@@ -43,6 +43,7 @@ type Props = {
   width?: number;
 };
 
+const NO_COLORS: Record<number, string> = {}; // a shared default, so the score doesn't redraw for a fresh {} each render
 const PAD = 8;
 const CLEF_W = 44;
 const TIME_W = 26;
@@ -71,7 +72,7 @@ function applyCursor(root: HTMLElement, cursor: number | undefined, scroll: bool
 }
 
 export function Score(props: Props) {
-  const { bars, barsPerLine, timeSig, keySig, chords, labels, labelFade, colors = {}, faded, selected, onTap, onChordTap, activeChord, cursor, width = 900 } = props;
+  const { bars, barsPerLine, timeSig, keySig, chords, labels, labelFade, colors = NO_COLORS, faded, selected, onTap, onChordTap, activeChord, cursor, width = 900 } = props;
   const host = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const cursorRef = useRef(cursor);

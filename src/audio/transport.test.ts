@@ -175,3 +175,38 @@ describe('Transport loop callback', () => {
     expect(loops.slice(0, 3)).toEqual([1, 2, 3]);
   });
 });
+
+describe('Transport robustness', () => {
+  it('keeps scheduling when one event throws', () => {
+    let now = 0;
+    const seen: number[] = [];
+    const t = new Transport({
+      now: () => now,
+      schedule: (e) => {
+        if (e.start === 1) throw new RangeError('bad event');
+        seen.push(e.start);
+      },
+    });
+    const quiet = console.error;
+    console.error = () => {};
+    t.start({ events: [ev(0), ev(1), ev(2)], bpm: 240, range: [0, 3], loop: false, countIn: 0, beatsPerBar: 4 });
+    while (now < 2) {
+      now += 0.025;
+      t.tick();
+    }
+    console.error = quiet;
+    expect(seen).toEqual([0, 2]);
+  });
+  it('does not report loops when there is nothing to play', () => {
+    let now = 0;
+    const t = new Transport({ now: () => now, schedule: () => {} });
+    let loops = 0;
+    t.onLoop = () => loops++;
+    t.start({ events: [], bpm: 120, range: [0, 4], loop: true, countIn: 0, beatsPerBar: 4 });
+    for (let i = 0; i < 80; i++) {
+      now += 0.025;
+      t.tick();
+    }
+    expect(loops).toBe(0);
+  });
+});

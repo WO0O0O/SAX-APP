@@ -86,7 +86,7 @@ export default function TunerScreen({ onSceneDim }: { onSceneDim: (dim: number) 
 
   const endHold = useCallback((drop: ReturnType<LongTone['update']>) => {
     if (!drop) return;
-    if (drop.seconds >= 1) {
+    if (drop.seconds >= 1 && drop.midi >= 58 && drop.midi <= 90) {
       setBests((b) => {
         if (drop.seconds <= (b[drop.midi] ?? 0)) return b;
         logLongTone(drop.midi, drop.seconds);

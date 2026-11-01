@@ -216,8 +216,13 @@ export function api(db: DatabaseSync, dataDir: string = DATA_DIR): Hono {
     const { lastInsertRowid } = db.prepare('INSERT INTO recordings (created_at, label, file, mime, seconds, answers) VALUES (?, ?, ?, ?, ?, ?)').run(now, body.label, '', mime, body.seconds, answers);
     const id = Number(lastInsertRowid);
     const file = `${id}.${EXT[mime]}`;
-    mkdirSync(RECORDINGS, { recursive: true });
-    writeFileSync(join(RECORDINGS, file), Buffer.from(body.data, 'base64'));
+    try {
+      mkdirSync(RECORDINGS, { recursive: true });
+      writeFileSync(join(RECORDINGS, file), Buffer.from(body.data, 'base64'));
+    } catch {
+      db.prepare('DELETE FROM recordings WHERE id = ?').run(id); // no row for audio that never reached the disk
+      return c.json({ error: 'could not save the audio' }, 500);
+    }
     db.prepare('UPDATE recordings SET file = ? WHERE id = ?').run(file, id);
     return c.json({ ok: true, id });
   });

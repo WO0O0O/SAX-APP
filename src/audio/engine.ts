@@ -52,6 +52,8 @@ export function newBus(): { input: GainNode; stop: () => void } {
 
 /** Plays one scheduled event on a bus. */
 export function sound(bus: { input: GainNode }, e: SchedEvent, at: number, durSec: number, voice: Voice, levels = { melody: 1, band: 1 }) {
+  const level = e.kind === 'melody' ? levels.melody : e.kind === 'click' ? 1 : levels.band;
+  if (level <= 0 || (e.gain ?? 0.5) <= 0) return; // muted (the Silent option)
   const { ctx } = engine();
   if (e.kind === 'click') return playClick(ctx, bus.input, at, Boolean(e.accent), 0.4);
   if (e.kind === 'drum') return playDrum(ctx, bus.input, e.drum!, at, (e.gain ?? 0.5) * levels.band);

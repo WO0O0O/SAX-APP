@@ -4,6 +4,8 @@
 export type Voice = 'reed' | 'piano';
 
 const clamp = (x: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, x));
+/** Exponential ramps can't target 0 (they throw), so aim for just above silence. */
+const floor = (x: number) => Math.max(0.0001, x);
 
 let noise: AudioBuffer | null = null;
 function noiseBuffer(ctx: BaseAudioContext): AudioBuffer {
@@ -74,8 +76,8 @@ function bass(ctx: BaseAudioContext, out: AudioNode, hz: number, at: number, dur
   const end = at + Math.max(dur * 0.92, 0.08);
   env.gain.setValueAtTime(0.0001, at);
   env.gain.linearRampToValueAtTime(gain * 0.5, at + 0.012);
-  env.gain.exponentialRampToValueAtTime(gain * 0.3, at + 0.18);
-  env.gain.setValueAtTime(gain * 0.28, end - 0.03);
+  env.gain.exponentialRampToValueAtTime(floor(gain * 0.3), at + 0.18);
+  env.gain.setValueAtTime(floor(gain * 0.28), end - 0.03);
   env.gain.exponentialRampToValueAtTime(0.0001, end + 0.05);
   const lp = ctx.createBiquadFilter();
   lp.type = 'lowpass';

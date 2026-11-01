@@ -15,6 +15,10 @@ export class IntonationLog {
       this.current = null;
       return;
     }
+    if (reading.midi < 58 || reading.midi > 90) {
+      this.current = null; // not a note on the horn: a hum, breath noise or an octave glitch
+      return;
+    }
     if (!this.current || this.current.midi !== reading.midi) {
       this.current = { midi: reading.midi, since: t };
       return;

@@ -38,7 +38,7 @@ export default function RecordScreen({ onSceneDim }: { onSceneDim: (dim: number)
     getTunes().then(setTunes);
     getRecordings().then((saved: SavedTake[]) =>
       setTakes((cur) => [
-        ...cur,
+        ...cur.filter((t) => !t.savedId), // replaced below, so a second load can't duplicate them
         ...saved.map((s) => ({ key: `s${s.id}`, label: s.label, url: recordingUrl(s.id), seconds: s.seconds, answers: s.answers, savedId: s.id, at: s.created_at })),
       ]),
     );
@@ -93,6 +93,7 @@ export default function RecordScreen({ onSceneDim }: { onSceneDim: (dim: number)
     try {
       const id = await saveRecording({ label: t.label, blob: t.blob, seconds: t.seconds, answers: t.answers });
       update(t.key, { savedId: id, url: recordingUrl(id), blob: undefined, key: `s${id}` });
+      setCompare((c) => c.map((k) => (k === t.key ? `s${id}` : k)));
       setOpen(null);
     } catch {
       setError('Could not save this take on the Mac.');

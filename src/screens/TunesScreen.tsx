@@ -112,6 +112,7 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
   );
 
   const pb = useTunePlayback(loaded);
+  const onChordTap = useCallback((bar: number, index: number) => setChordSel({ bar, index }), []);
 
   const onTap = useCallback(
     (i: number) => {
@@ -296,7 +297,7 @@ export default function TunesScreen({ onSceneDim }: { onSceneDim: (dim: number) 
                     faded={semis !== 0 ? outsideRange : undefined}
                     selected={pb.playing ? undefined : selected}
                     onTap={onTap}
-                    onChordTap={hasChords ? (bar, index) => setChordSel({ bar, index }) : undefined}
+                    onChordTap={hasChords ? onChordTap : undefined}
                     activeChord={chordSel}
                     cursor={pb.playing ? pb.cursor : undefined}
                     width={980}

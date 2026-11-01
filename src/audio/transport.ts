@@ -121,18 +121,22 @@ export class Transport {
           }
           return;
         }
+        if (this.events.length === 0) return; // nothing to repeat
         this.iter++;
         this.index = 0;
         this.onLoop?.(this.iter);
-        if (this.events.length === 0) return;
       }
       const e = this.events[this.index];
       const v = this.iter * len + (e.start - a);
       const at = this.timeOf(v);
       if (at >= horizon) return;
       const dur = Math.min(e.dur, b - e.start);
-      this.clock.schedule(e, at, dur * secPerBeat);
-      this.index++;
+      this.index++; // move on first, so one bad event can never stall the rest
+      try {
+        this.clock.schedule(e, at, dur * secPerBeat);
+      } catch (err) {
+        console.error('Could not schedule an audio event', err);
+      }
     }
   }
 }

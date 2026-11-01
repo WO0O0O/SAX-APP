@@ -31,10 +31,13 @@ export function useTuner({ a4, gate, onFrame }: Options) {
   const [frame, setFrame] = useState<TunerFrame | null>(null);
   const mic = useRef<Mic | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+  const generation = useRef(0); // bumped by stop(), so a start still waiting for permission can see it was cancelled
+  const starting = useRef(false);
   const live = useRef({ a4, gate, onFrame });
   live.current = { a4, gate, onFrame };
 
   const stop = useCallback(() => {
+    generation.current++;
     clearInterval(timer.current);
     mic.current?.close();
     mic.current = null;
@@ -43,9 +46,16 @@ export function useTuner({ a4, gate, onFrame }: Options) {
   }, []);
 
   const start = useCallback(async () => {
+    if (mic.current || starting.current) return;
+    starting.current = true;
+    const mine = ++generation.current;
     setError(null);
     try {
       const m = await openMic();
+      if (generation.current !== mine) {
+        m.close(); // stopped while waiting for the microphone permission
+        return;
+      }
       mic.current = m;
       const buf = new Float32Array(MIC_WINDOW);
       const smoother = new PitchSmoother(5);
@@ -72,6 +82,8 @@ export function useTuner({ a4, gate, onFrame }: Options) {
     } catch (e) {
       setError(e instanceof MicError ? e.message : 'Could not start the microphone.');
       setActive(false);
+    } finally {
+      starting.current = false;
     }
   }, []);
 

@@ -64,7 +64,8 @@ export function useTunePlayback(chart: Chart | null) {
       if (loop) range = barRange(piece, from, to);
       else if (fromItem !== undefined && piece.itemStarts[fromItem] !== undefined) range = [piece.itemStarts[fromItem], piece.totalBeats];
       const events: SchedEvent[] = [];
-      if (melody) events.push(...melodyEvents(piece.events, swing));
+      const playMelody = melody || band === 'off' || !chart.chords.some((c) => c.length); // the Melody box only exists with a band
+      if (playMelody) events.push(...melodyEvents(piece.events, swing));
       if (click) for (let b = Math.ceil(range[0]); b < range[1]; b++) events.push({ start: b, dur: 1, kind: 'click', accent: b % bpb === 0 });
       if (band !== 'off' && chart.chords.some((c) => c.length)) {
         const segments = chordSegments(chart.chords, parseChord, piece.barStarts, piece.totalBeats);
@@ -79,7 +80,7 @@ export function useTunePlayback(chart: Chart | null) {
         countIn: countIn ? bpb : 0,
         beatsPerBar: bpb,
         voice,
-        cursorEvents: melody ? swungCursor(piece.events, swing) : [],
+        cursorEvents: playMelody ? swungCursor(piece.events, swing) : [],
         levels: silent ? { melody: 0, band: 0 } : { melody: 1, band: 0.75 },
         // Speed trainer: every few loops, a little faster.
         onLoop: (n) => {

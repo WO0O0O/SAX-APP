@@ -115,6 +115,12 @@ describe('IntonationLog', () => {
     expect(out[0].midi).toBe(72);
     expect(out[0].sum / out[0].n).toBeCloseTo(8, 0);
   });
+  it('ignores notes that are not on the horn', () => {
+    const log = new IntonationLog(0);
+    for (let k = 0; k < 10; k++) log.add(k / 30, r(52, 5)); // below low B♭
+    for (let k = 0; k < 10; k++) log.add(k / 30, r(95, 5)); // above high F♯
+    expect(log.take()).toHaveLength(0);
+  });
   it('starts a fresh batch after take()', () => {
     const log = new IntonationLog(0);
     log.add(0, r(70, 5));

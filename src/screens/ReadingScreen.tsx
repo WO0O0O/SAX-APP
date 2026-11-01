@@ -118,8 +118,8 @@ export default function ReadingScreen({ onSceneDim }: { onSceneDim: (dim: number
   );
   const tuner = useTuner({ a4: prefs.a4, gate: prefs.gate, onFrame });
   useEffect(() => {
-    if (listen && !tuner.active) void tuner.start();
-    if (!listen && tuner.active) tuner.stop();
+    if (listen) void tuner.start();
+    else tuner.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listen]);
 
@@ -130,11 +130,10 @@ export default function ReadingScreen({ onSceneDim }: { onSceneDim: (dim: number
       if (getSettings().tapSounds && !pb.playing) previewNote(notes[i].midi);
       if (mode === 'check') {
         setSelected(i);
-        setMarks((m) => {
-          if (m[i] === 'lookup') return m;
-          logLookup(notes[i].midi);
-          return { ...m, [i]: 'lookup' };
-        });
+        if (!marksRef.current[i]) {
+          logLookup(notes[i].midi); // outside the state update, so it can't be counted twice
+          setMarks((m) => (m[i] ? m : { ...m, [i]: 'lookup' }));
+        }
       } else {
         setMarks((m) => {
           const next = { ...m };

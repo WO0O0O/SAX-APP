@@ -22,7 +22,10 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      for (const key of await caches.keys()) if (key.startsWith('sax-') && key !== CACHE) await caches.delete(key);
+      // Keep this build and the one before it: a tab still open on the old build may need to load its lazy files.
+      const keys = (await caches.keys()).filter((k) => k.startsWith('sax-'));
+      const keep = new Set([CACHE, ...keys.filter((k) => k !== CACHE).slice(-1)]);
+      for (const key of keys) if (!keep.has(key)) await caches.delete(key);
       await self.clients.claim();
     })(),
   );
