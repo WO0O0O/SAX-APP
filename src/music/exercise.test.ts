@@ -3,7 +3,7 @@ import { scaleSpellings } from './build.ts';
 import { generateExercise } from './exercise.ts';
 import { SCALES } from './scales.ts';
 
-const BEATS = { w: 4, h: 2, q: 1, '8': 0.5 };
+const BEATS = { w: 4, h: 2, q: 1, '8': 0.5, '16': 0.25 };
 
 describe('exercise generator', () => {
   for (const scale of SCALES) {

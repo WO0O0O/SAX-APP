@@ -9,7 +9,7 @@ import { keyAccidentals } from '../music/keys.ts';
 
 export type ScoreItem = {
   note?: Note; // undefined = rest
-  duration: 'w' | 'h' | 'q' | '8';
+  duration: 'w' | 'h' | 'q' | '8' | '16';
   dots?: number;
   tie?: boolean; // tied to the next item
   triplet?: boolean;
@@ -50,7 +50,7 @@ const TIME_W = 26;
 const INK = '#1a1210';
 const FADED = '#9a8b80';
 const ACC_ASCII: Record<number, string> = { [-2]: 'bb', [-1]: 'b', 0: 'n', 1: '#', 2: '##' };
-const BEATS = { w: 4, h: 2, q: 1, '8': 0.5 };
+const BEATS = { w: 4, h: 2, q: 1, '8': 0.5, '16': 0.25 };
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const vexKey = (n: Note) => `${LETTERS[n.letter].toLowerCase()}/${n.octave}`;

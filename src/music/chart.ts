@@ -4,7 +4,7 @@ import type { ChordSymbol, ScoreItem } from '../notation/Score.tsx';
 // Tune charts live in sheet-music/<slug>.tune.json (git-ignored: transcriptions of other people's
 // arrangements). Each bar is a string of tokens:
 //   E5/q    note, quarter        r/q.   dotted quarter rest
-//   B5/8~   eighth, tied to next C5/q3  quarter-note triplet member
+//   B5/8~   eighth, tied to next (w h q 8 16)   C5/q3  quarter-note triplet member
 // Chords are "Name" (beat 0) or "Name@beat".
 
 export type ChartFile = {
@@ -24,7 +24,7 @@ export type ChartFile = {
 export type Chord = ChordSymbol;
 export type Chart = Omit<ChartFile, 'bars'> & { bars: ScoreItem[][]; chords: Chord[][] };
 
-const TOKEN = /^(r|[A-G](?:#{1,2}|b{1,2})?-?\d)\/(w|h|q|8)(\.?)(~?)(3?)$/;
+const TOKEN = /^(r|[A-G](?:#{1,2}|b{1,2})?-?\d)\/(w|h|q|8|16)(\.?)(~?)(3?)$/;
 
 export function parseItem(token: string): ScoreItem {
   const m = TOKEN.exec(token);
@@ -38,7 +38,7 @@ export function parseItem(token: string): ScoreItem {
   };
 }
 
-const BEATS = { w: 4, h: 2, q: 1, '8': 0.5 };
+const BEATS = { w: 4, h: 2, q: 1, '8': 0.5, '16': 0.25 };
 
 /** Length in beats, counting dots and triplets. */
 export function beatsOf(it: ScoreItem): number {

@@ -43,6 +43,7 @@ Free practice areas, no practice-session timers. Fingerings for every written no
 
 ## Open questions
 - **Not yet tried on the real horn.** The tuner, Listen and recording were checked with synthetic and recorded tones. First things to check in a room: the Sensitivity slider, whether Pro (±5¢) feels too strict, and that Listen doesn't pick up the speakers (use headphones).
+- **Kingdom of Predators:** a solo alto line (13 bars) transcribed from the Soprano 2 melody in two screenshots of an ensemble score (bars 33-45), moved down a 4th into alto pitch. Only those bars exist; send the rest of the melody for the full tune. No chord symbols.
 - **Chord symbols:** only Autumn Leaves and My One and Only Love came with chords. **Happy Birthday's are my guess at the usual harmonisation** (correct them if your teacher plays something else). Smooth Operator, Naima and Is It a Crime have none, so the chord panel, colours and band don't appear for them; send a lead sheet and they get added.
 - iPhone: the silent switch can mute web audio on older iOS (16.4+ is fine); worth a quick check, along with Add to Home Screen.
 - Plain copies of `autumn-leaves-easy.pdf` and `smooth-operator-sade.pdf` remain in the first commit's history. The student chose to leave them; a history rewrite + force push would remove them.

@@ -68,7 +68,7 @@ Each bar's `notes` is a space-separated list. One token per note or rest:
    │    │ │ │ └─ 3  = part of a triplet (three of these fill the time of two)
    │    │ │ └─── ~  = tied to the next note
    │    │ └───── .  = dotted (half as long again)
-   │    └─────── length: w whole · h half · q quarter · 8 eighth
+   │    └─────── length: w whole · h half · q quarter · 8 eighth · 16 sixteenth
    └──────────── written pitch with octave (C4 = middle C), or r for a rest
 ```
 
