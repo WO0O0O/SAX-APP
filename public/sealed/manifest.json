@@ -24,6 +24,14 @@
       "sha256": "32744768d64da526dbf73b0c696500aa84f741950e83a06221bc9feb724494f8",
       "bytes": 1059
     },
+    "in-a-sentimental-mood.pdf": {
+      "sha256": "b015fe0e9c6bad88bc796247fe229dd69f90afa20d8c7bace1dc1a4b9e23ee88",
+      "bytes": 178046
+    },
+    "in-a-sentimental-mood.tune.json": {
+      "sha256": "dcfc566e4b6f5dd69363dd846aa0a56f1e2c63c83a571302fd86d10231e9c370",
+      "bytes": 266
+    },
     "is-it-a-crime.pdf": {
       "sha256": "b0d1d9b91379feba8271e9c76ebef8206e8548d36af39643c1cd948fd5236b0f",
       "bytes": 286807
@@ -59,6 +67,10 @@
     "smooth-operator.tune.json": {
       "sha256": "2a78ccc0e435df9c21ac61064736d2c027037a71d62513c9ce544a7b3111bcf6",
       "bytes": 681
+    },
+    "so-what.tune.json": {
+      "sha256": "206291027dafab98268f036abefd7965edc01eaa24d78f7e2738dce8b209ee63",
+      "bytes": 239
     }
   }
 }
