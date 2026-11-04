@@ -18,11 +18,12 @@ export type ChartFile = {
   swing?: boolean; // eighths are swung
   band?: 'swing' | 'ballad' | 'bossa' | 'straight8'; // the backing style to start with
   pdf?: string; // original PDF in sheet-music/
-  bars: { notes: string; chords?: string[] }[];
+  /** A bar may start a new time signature, e.g. '5/4'; it holds until the next one. */
+  bars: { notes: string; chords?: string[]; timeSig?: string }[];
 };
 
 export type Chord = ChordSymbol;
-export type Chart = Omit<ChartFile, 'bars'> & { bars: ScoreItem[][]; chords: Chord[][] };
+export type Chart = Omit<ChartFile, 'bars'> & { bars: ScoreItem[][]; chords: Chord[][]; /** per bar: set only where the metre changes */ barTimeSigs?: (string | undefined)[] };
 
 const TOKEN = /^(r|[A-G](?:#{1,2}|b{1,2})?-?\d)\/(w|h|q|8|16)(\.?)(~?)(3?)$/;
 
@@ -49,6 +50,7 @@ export function beatsOf(it: ScoreItem): number {
 export function parseChart(file: ChartFile): Chart {
   return {
     ...file,
+    barTimeSigs: file.bars.map((b) => b.timeSig),
     bars: file.bars.map((b) => b.notes.trim().split(/\s+/).map(parseItem)),
     chords: file.bars.map((b) =>
       (b.chords ?? []).map((c) => {

@@ -20,6 +20,8 @@ type Props = {
   bars: ScoreItem[][];
   barsPerLine: number;
   timeSig?: string;
+  /** A different time signature starting at a bar (index = bar); shown where it changes. */
+  barTimeSigs?: (string | undefined)[];
   /** VexFlow key spec ('G', 'F', 'Bb'...). Accidentals then follow the key. */
   keySig?: string;
   chords?: ChordSymbol[][];
@@ -72,7 +74,7 @@ function applyCursor(root: HTMLElement, cursor: number | undefined, scroll: bool
 }
 
 export function Score(props: Props) {
-  const { bars, barsPerLine, timeSig, keySig, chords, labels, labelFade, colors = NO_COLORS, faded, selected, onTap, onChordTap, activeChord, cursor, width = 900 } = props;
+  const { bars, barsPerLine, timeSig, barTimeSigs, keySig, chords, labels, labelFade, colors = NO_COLORS, faded, selected, onTap, onChordTap, activeChord, cursor, width = 900 } = props;
   const host = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const cursorRef = useRef(cursor);
@@ -118,7 +120,10 @@ export function Score(props: Props) {
       svg.appendChild(t);
     };
 
+    let currentTs = timeSig;
     bars.forEach((bar, b) => {
+      const changeTs = b > 0 && barTimeSigs?.[b] && barTimeSigs[b] !== currentTs ? barTimeSigs[b] : undefined;
+      if (changeTs) currentTs = changeTs;
       const col = b % barsPerLine;
       const line = Math.floor(b / barsPerLine);
       const first = col === 0;
@@ -140,6 +145,7 @@ export function Score(props: Props) {
         if (keySig) stave.addKeySignature(keySig);
       }
       if (lead) stave.addTimeSignature(timeSig!);
+      else if (changeTs) stave.addTimeSignature(changeTs);
       const last = b === bars.length - 1;
       stave.setEndBarType(last ? BarlineType.END : scaleMode ? BarlineType.NONE : BarlineType.SINGLE);
       stave.setContext(ctx).draw();
@@ -258,7 +264,7 @@ export function Score(props: Props) {
     svg.style.height = 'auto';
     // A redraw wipes the highlight, so put it back.
     applyCursor(el, cursorRef.current, false);
-  }, [bars, barsPerLine, timeSig, keySig, chords, labels, colors, faded, labelFade, selected, onTap, onChordTap, activeChord?.bar, activeChord?.index, width, ready]);
+  }, [bars, barsPerLine, timeSig, barTimeSigs, keySig, chords, labels, colors, faded, labelFade, selected, onTap, onChordTap, activeChord?.bar, activeChord?.index, width, ready]);
 
   // The playback cursor moves without redrawing the whole score.
   useEffect(() => {

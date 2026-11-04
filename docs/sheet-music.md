@@ -54,7 +54,7 @@ Each tune is one JSON file in `sheet-music/` (git-ignored, because these are oth
 | `keySig` | The key signature to draw, as a major key (`G` = one sharp, `F` = one flat). It also decides which accidentals need printing (§6). |
 | `writtenKey`, `concertKey`, `arranger` | Shown in the tune's header. |
 | `pdf` | Which file the "Original PDF" link opens. |
-| `timeSig` | Optional, default `"4/4"`; e.g. `"3/4"` or `"12/8"`. |
+| `timeSig` | Optional, default `"4/4"`; e.g. `"3/4"` or `"12/8"`. A single bar can also carry its own `"timeSig"` (e.g. `"5/4"`), which holds until another bar changes it back; Kingdom does this. |
 | `tempo`, `swing` | Optional. The tempo (quarter-note bpm) playback starts at, and `true` if the eighths are swung. They only set the starting values of the playback bar. |
 | `chords` (per bar) | Optional chord symbols, `"Name"` or `"Name@beat"`. They make the chord panel, chord-tone colours and the backing band work for that tune; a tune without them still plays, just without a band. |
 | `bars` | One entry per bar, in order. A pickup bar is written as a full bar starting with rests. |
@@ -256,7 +256,7 @@ The file name must match the tune's title as a "slug": `Smooth Operator` → `sm
 ## 10. Current limits
 
 The renderer handles what the current charts need. A new chart might need more:
-- **Time signature:** 4/4 by default; a chart can set `"timeSig"` such as `"3/4"` or `"12/8"` (bar length is counted in quarter notes, so 12/8 = 6). A bar holding a single `r/w` counts as a whole-bar rest in any metre. No changing metre mid-tune.
+- **Time signature:** 4/4 by default; a chart can set `"timeSig"` such as `"3/4"` or `"12/8"` (bar length is counted in quarter notes, so 12/8 = 6). A bar holding a single `r/w` counts as a whole-bar rest in any metre. Metre can change at a bar line (per-bar `timeSig`), and the chart test counts each bar against the metre in force.
 - **One melody line.** No chords on the staff, no second voice.
 - **No repeat signs, first/second endings, D.C./coda, dynamics, articulations or lyrics.** Charts that use them are written out in full.
 - **No slurs.** Only ties (same pitch). A slur in the PDF can be left out; it doesn't change the notes or fingerings.

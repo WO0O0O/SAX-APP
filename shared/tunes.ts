@@ -5,7 +5,7 @@ export const TUNES: [string, string | null, 'active' | 'queued'][] = [
   ['Naima', null, 'active'],
   ['Smooth Operator', 'F minor', 'active'],
   ['So What', 'D Dorian', 'queued'],
-  ['In a Sentimental Mood', null, 'queued'],
+  ['In a Sentimental Mood', 'F major', 'queued'],
   ['12-bar blues', 'F', 'queued'],
   ['Happy Birthday', 'E♭', 'queued'],
   ['Is It a Crime', null, 'queued'],

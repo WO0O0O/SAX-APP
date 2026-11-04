@@ -14,7 +14,7 @@ A personal alto sax practice app: every fingering on the horn, scales from the c
 |---|---|
 | **Scales** | Pick a key on the circle of fifths and one of 21 scales. How it sounds, where it's used, songs, the notes on the staff for one octave and the whole horn (low B♭ to high F♯), a fingering for every note, and **play it** up and down. |
 | **All notes** | Every written note from low B♭ to high F♯, with alternate fingerings. |
-| **Tunes** | My charts (Autumn Leaves, Smooth Operator, Naima, Happy Birthday, Is It a Crime, My One and Only Love) as interactive sheet music. Tap a note for its fingering, a chord for its notes; **play** it at any tempo with swing, a loop, a count-in and a backing band; transpose it to any key. |
+| **Tunes** | My charts (Autumn Leaves, Smooth Operator, Naima, Happy Birthday, Is It a Crime, My One and Only Love, In a Sentimental Mood, So What, Kingdom) as interactive sheet music. Tap a note for its fingering, a chord for its notes; **play** it at any tempo with swing, a loop, a count-in and a backing band; transpose it to any key. |
 | **Backing** | A band for practising improvising: 12-bar blues, minor blues, ii–V–I, ii–V–i, a turnaround and a So What vamp, in any key and tempo, with a speed trainer. |
 | **Reading** | Endless sight-reading exercises in the chosen key and scale. Play first; tap a note only if you need its fingering, or switch on **Listen** and let the microphone follow you. |
 | **Quiz** | Fingering flash-cards: see a note and press the keys, or see the keys and name the note. Weak notes come back. |
