@@ -25,12 +25,12 @@
       "bytes": 1059
     },
     "in-a-sentimental-mood.pdf": {
-      "sha256": "b015fe0e9c6bad88bc796247fe229dd69f90afa20d8c7bace1dc1a4b9e23ee88",
-      "bytes": 178046
+      "sha256": "9c420324fd13f0d28d53605f8ff13a0a90ea6bc999930367eae8d8da5805b8a2",
+      "bytes": 166869
     },
     "in-a-sentimental-mood.tune.json": {
-      "sha256": "dcfc566e4b6f5dd69363dd846aa0a56f1e2c63c83a571302fd86d10231e9c370",
-      "bytes": 266
+      "sha256": "f3c1b4a41395e1175d53109c28b320df4044e720fa181fd34576f6e6546ed5ef",
+      "bytes": 2357
     },
     "is-it-a-crime.pdf": {
       "sha256": "b0d1d9b91379feba8271e9c76ebef8206e8548d36af39643c1cd948fd5236b0f",
@@ -41,8 +41,12 @@
       "bytes": 2677
     },
     "kingdom-of-predators.tune.json": {
-      "sha256": "2bd11c44807a5594b7aa9095153069097cfb256e1f664fa43dbf28c69a953c1b",
-      "bytes": 919
+      "sha256": "74551397f39d371ba428b16433e73e4213fae3c04b279ad389a793eab3bf2ebd",
+      "bytes": 1635
+    },
+    "kingdom.pdf": {
+      "sha256": "3958b5f4fa3075de9f97b6beec3e3e39eeb4d65498a2819a201eec1ff292f0c0",
+      "bytes": 174702
     },
     "my-one-and-only-love.pdf": {
       "sha256": "be3c85765fa407d97c0540ed05f6e47d356600f2cfa9d7a711e4b27b129d2c16",
@@ -68,9 +72,13 @@
       "sha256": "2a78ccc0e435df9c21ac61064736d2c027037a71d62513c9ce544a7b3111bcf6",
       "bytes": 681
     },
+    "so-what.pdf": {
+      "sha256": "57991f1f3fd7b7c55d799056a2dbfa18a937727c79cd7a27bd628e306a9e988f",
+      "bytes": 295652
+    },
     "so-what.tune.json": {
-      "sha256": "206291027dafab98268f036abefd7965edc01eaa24d78f7e2738dce8b209ee63",
-      "bytes": 239
+      "sha256": "cfff66df14f4ddfdd203eb6a7b07fa448af6455583076934358a43d4b3541b4c",
+      "bytes": 3772
     }
   }
 }
