@@ -44,14 +44,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Everything else: the saved copy first (files are fingerprinted), and keep what is fetched.
+  // Everything else: this build's saved copy first (files are fingerprinted, and the sealed sheet music is
+  // re-downloaded with every build), then the network, and only if offline any older saved copy.
+  // Looking in older caches first would serve last build's sheet music after a deploy.
   event.respondWith(
     (async () => {
-      const hit = await caches.match(req);
+      const cache = await caches.open(CACHE);
+      const hit = await cache.match(req);
       if (hit) return hit;
-      const res = await fetch(req);
-      if (res.ok) (await caches.open(CACHE)).put(req, res.clone());
-      return res;
+      try {
+        const res = await fetch(req);
+        if (res.ok) cache.put(req, res.clone());
+        return res;
+      } catch (err) {
+        const old = await caches.match(req);
+        if (old) return old;
+        throw err;
+      }
     })(),
   );
 });
